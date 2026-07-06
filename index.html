@@ -103,40 +103,39 @@
 
   .weekdays{ display:grid; grid-template-columns: repeat(7,1fr); gap:6px; margin-bottom:6px; }
   .weekdays span{ text-align:center; font-size:11px; color: var(--ink-soft); font-weight:700; letter-spacing:1px; }
-  .grid{ display:grid; grid-template-columns: repeat(7,1fr); gap:6px; }
-  .cell{
-    min-height:84px; border-radius:10px; border:1px solid var(--border);
-    background: var(--surface-2); padding:6px 6px 5px; position:relative;
-    display:flex; flex-direction:column; gap:3px; transition: all .12s ease;
+
+  .weeks-wrap{ display:flex; flex-direction:column; gap:6px; }
+  .week-grid{
+    display:grid; grid-template-columns: repeat(7,1fr); gap:3px 6px; position:relative;
   }
-  .cell.empty{ background:transparent; border-color:transparent; }
-  .cell.adjacent{ background: var(--bg-alt); border-style: dashed; }
-  .cell.adjacent .datenum{ color: var(--ink-soft); font-weight:600; }
-  .cell.holiday{ box-shadow: inset 0 3px 0 var(--gold); }
-  .holiday-tag{
-    font-size:9.5px; font-weight:700; color:#7A5A2A; background: linear-gradient(145deg,#F0DFC0,#E7CFA0);
-    padding:2px 5px; border-radius:5px; margin-bottom:2px; white-space:normal; word-break:break-word;
+  .day-frame{
+    border-radius:10px; border:1px solid var(--border); background: var(--surface-2);
+    padding:5px 6px; position:relative; transition: all .12s ease;
   }
-  .cell.selectable{ cursor:pointer; }
-  .cell.selectable:hover{ border-color: var(--accent); box-shadow: 0 0 0 2px rgba(126,140,116,0.15); }
-  .cell.disabled{ opacity:.6; background: var(--bg-alt); }
-  .cell.today{ border-color: var(--gold); border-width:2px; }
-  .cell.in-range{ background: #DED2BC; border-color: var(--gold); }
-  .cell.range-end{ background: #D4C4A4; }
-  .cell .datenum{ font-size:12px; font-weight:700; color: var(--ink); }
-  .cell.disabled .datenum{ color: var(--ink-soft); }
-  .badges{ display:flex; flex-direction:column; gap:2px; overflow:hidden; }
-  .badge{
-    font-size:10px; padding:2px 5px; border-radius:5px; font-weight:600;
-    white-space: normal; overflow-wrap: break-word; word-break: break-word; line-height:1.35;
-  }
-  .badge.morning{ background: var(--morning-bg); color: var(--morning-ink); }
-  .badge.evening{ background: var(--evening-bg); color: var(--evening-ink); }
-  .badge.stay{ background: var(--stay-bg); color: var(--stay-ink); }
-  .badge.clickable{ cursor:pointer; }
-  .badge.clickable:hover{ filter: brightness(0.93); }
-  .cap-note{ font-size:9px; color: var(--ink-soft); margin-top:auto; }
+  .day-frame-top{ display:flex; align-items:center; justify-content:space-between; gap:4px; }
+  .day-frame .datenum{ font-size:12px; font-weight:700; color: var(--ink); }
+  .holiday-dot{ font-size:11px; cursor:default; }
+  .day-frame.adjacent{ background: var(--bg-alt); border-style: dashed; }
+  .day-frame.adjacent .datenum{ color: var(--ink-soft); font-weight:600; }
+  .day-frame.holiday{ box-shadow: inset 0 3px 0 var(--gold); }
+  .day-frame.selectable{ cursor:pointer; }
+  .day-frame.selectable:hover{ border-color: var(--accent); box-shadow: 0 0 0 2px rgba(126,140,116,0.15); }
+  .day-frame.disabled{ opacity:.6; background: var(--bg-alt); }
+  .day-frame.disabled .datenum{ color: var(--ink-soft); }
+  .day-frame.today{ border-color: var(--gold); border-width:2px; }
+  .day-frame.in-range{ background: #DED2BC; border-color: var(--gold); }
+  .cap-note{ font-size:9px; color: var(--ink-soft); position:absolute; bottom:4px; left:6px; }
   .cap-note.full{ color: var(--danger); font-weight:700; }
+
+  .resbar{
+    align-self:center; height:20px; border-radius:6px; font-size:10.5px; font-weight:700;
+    display:flex; align-items:center; padding:0 7px; overflow:hidden; white-space:nowrap;
+    text-overflow:ellipsis; margin:0 1px;
+  }
+  .resbar.morning{ background: var(--morning-bg); color: var(--morning-ink); border:1px solid var(--morning); }
+  .resbar.evening{ background: var(--evening-bg); color: var(--evening-ink); border:1px solid var(--evening); }
+  .resbar.clickable{ cursor:pointer; }
+  .resbar.clickable:hover{ filter: brightness(0.94); }
 
   .legend{ display:flex; gap:16px; margin-top:14px; font-size:12px; color: var(--ink-soft); flex-wrap:wrap; }
   .legend span{ display:inline-flex; align-items:center; gap:6px; }
@@ -145,7 +144,6 @@
   .dot.evening{ background: var(--evening); }
   .dot.today{ background: var(--gold); }
   .dot.range{ background: #D4C4A4; }
-  .dot.stay{ background: var(--stay); }
 
   .form-title{ font-size:16px; margin-bottom:4px; }
   .form-sub{ font-size:12px; color: var(--ink-soft); margin:0 0 16px; }
@@ -248,6 +246,10 @@
 
   const ADMIN_PASSWORD = "admin123"; // 管理者密碼，可自行修改
 
+  // Supabase 設定：取代 Claude Artifact 專屬的 window.storage
+  const SUPABASE_URL = "https://ipuiikywfbqwuypenshl.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_DfYbmgIEjEVZu21j5wf1kQ_-KygmVxx";
+
   const WEEKDAYS = ["日","一","二","三","四","五","六"];
   const PERIOD_LABEL = { morning: "早段", evening: "晚段" };
 
@@ -290,53 +292,74 @@
   }
   function cmpStr(a,b){ return a < b ? -1 : (a > b ? 1 : 0); }
 
-  // ---------- storage ----------
+  // ---------- storage (Supabase kv_store 表) ----------
+  async function sbGet(key){
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/kv_store?key=eq.${encodeURIComponent(key)}&select=value`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    if(!res.ok) throw new Error("Supabase get failed: " + res.status);
+    const data = await res.json();
+    return data.length > 0 ? data[0].value : null;
+  }
+  async function sbSet(key, value){
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/kv_store`, {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+        "Content-Type": "application/json",
+        Prefer: "resolution=merge-duplicates"
+      },
+      body: JSON.stringify({ key, value, updated_at: new Date().toISOString() })
+    });
+    if(!res.ok) throw new Error("Supabase set failed: " + res.status);
+  }
+
   async function loadAll(){
     try{
-      const r = await window.storage.get("reservations", true);
-      state.reservations = r ? JSON.parse(r.value) : [];
+      const v = await sbGet("reservations");
+      state.reservations = v ? JSON.parse(v) : [];
     }catch(e){ state.reservations = []; }
     try{
-      const s = await window.storage.get("settings", true);
-      state.settings = s ? JSON.parse(s.value) : state.settings;
+      const v = await sbGet("settings");
+      state.settings = v ? JSON.parse(v) : state.settings;
     }catch(e){ /* keep default */ }
     try{
-      const h = await window.storage.get("holidays", true);
-      state.holidays = h ? JSON.parse(h.value) : [];
+      const v = await sbGet("holidays");
+      state.holidays = v ? JSON.parse(v) : [];
     }catch(e){ state.holidays = []; }
     try{
-      const a = await window.storage.get("isAdmin", false);
-      state.isAdmin = !!(a && a.value === "true");
+      state.isAdmin = localStorage.getItem("guildIsAdmin") === "true";
     }catch(e){ state.isAdmin = false; }
     state.loaded = true;
   }
   async function saveReservations(){
-    try{ await window.storage.set("reservations", JSON.stringify(state.reservations), true); }
+    try{ await sbSet("reservations", JSON.stringify(state.reservations)); }
     catch(e){ toast("儲存預約失敗，請稍後再試", "error"); }
   }
   async function saveSettings(){
-    try{ await window.storage.set("settings", JSON.stringify(state.settings), true); }
+    try{ await sbSet("settings", JSON.stringify(state.settings)); }
     catch(e){ toast("儲存設定失敗，請稍後再試", "error"); }
   }
   async function saveHolidays(){
-    try{ await window.storage.set("holidays", JSON.stringify(state.holidays), true); }
+    try{ await sbSet("holidays", JSON.stringify(state.holidays)); }
     catch(e){ toast("儲存節日失敗，請稍後再試", "error"); }
   }
   async function persistAdminFlag(val){
-    try{ await window.storage.set("isAdmin", val ? "true" : "false", false); }catch(e){}
+    try{ localStorage.setItem("guildIsAdmin", val ? "true" : "false"); }catch(e){}
   }
   async function refreshShared(){
     try{
-      const r = await window.storage.get("reservations", true);
-      state.reservations = r ? JSON.parse(r.value) : [];
+      const v = await sbGet("reservations");
+      state.reservations = v ? JSON.parse(v) : [];
     }catch(e){}
     try{
-      const s = await window.storage.get("settings", true);
-      state.settings = s ? JSON.parse(s.value) : state.settings;
+      const v = await sbGet("settings");
+      state.settings = v ? JSON.parse(v) : state.settings;
     }catch(e){}
     try{
-      const h = await window.storage.get("holidays", true);
-      state.holidays = h ? JSON.parse(h.value) : [];
+      const v = await sbGet("holidays");
+      state.holidays = v ? JSON.parse(v) : [];
     }catch(e){}
     // 若使用者正在輸入框中打字（例如節日名稱、姓名、備註），暫緩重繪，避免蓋掉尚未送出的內容
     const activeTag = document.activeElement && document.activeElement.tagName;
@@ -479,45 +502,28 @@
     return `<div class="alert-banner" style="padding:10px 14px;"><h3 style="margin-bottom:6px;">🔔 今日須離開</h3><div class="alert-list">${leaving.map(r=>`<span class="alert-chip">${escapeHtml(r.mainName)}（${PERIOD_LABEL[r.exitPeriod]}）</span>`).join("")}</div></div>`;
   }
 
-  function buildDayCell(dateObj, day, selectable, adjacent){
+  function diffDaysStr(aStr, bStr){
+    return Math.round((parseDateStr(bStr) - parseDateStr(aStr)) / 86400000);
+  }
+
+  // 單一日期方格的外框（背景、邊框、日期數字、節日小圖示、容留人數），高度貫穿整週
+  function buildDayFrame(dateObj, day, colIndex, selectable, adjacent){
     const dateStr = toStr(dateObj);
     const within = isWithinWindow(dateStr);
     const isToday = dateStr === todayStr();
     const inRange = state.selStart && state.selEnd && dateStr >= state.selStart && dateStr <= state.selEnd;
     const holidays = holidaysOn(dateStr);
-
-    let holidayHtml = "";
-    holidays.forEach(h => {
-      const rangeText = h.startDate ? `，${h.startDate} 起` : "";
-      const endText = h.endMode === "fixed" && h.endDate ? `至 ${h.endDate}` : "永遠重複";
-      holidayHtml += `<div class="holiday-tag" title="${escapeHtml(h.label)}（每週${h.weekdays.map(i=>WEEKDAYS[i]).join('、')}${rangeText}，${endText}）">🎌 ${escapeHtml(h.label)}</div>`;
-    });
-
     const occupants = occupantsOn(dateStr);
-    let badgesHtml = "";
-    occupants.forEach(r => {
-      const isStart = dateStr === r.start;
-      const isEnd = dateStr === r.end;
-      const adminAttrs = state.isAdmin ? ` clickable" data-act="edit-open" data-id="${r.id}` : "";
-      if(isStart){
-        const cls = r.entryPeriod === "morning" ? "morning" : "evening";
-        const icon = r.entryPeriod === "morning" ? "☀" : "☾";
-        let text = `▶${icon} ${escapeHtml(r.mainName)}`;
-        let title = `${PERIOD_LABEL[r.entryPeriod]}進入：${escapeHtml(r.mainName)}`;
-        if(isEnd){
-          const exIcon = r.exitPeriod === "morning" ? "☀" : "☾";
-          text += ` ${exIcon}◀`;
-          title = `${PERIOD_LABEL[r.entryPeriod]}進入／${PERIOD_LABEL[r.exitPeriod]}離開：${escapeHtml(r.mainName)}`;
-        }
-        badgesHtml += `<div class="badge ${cls}${adminAttrs}" title="${title}">${text}</div>`;
-      } else if(isEnd){
-        const cls = r.exitPeriod === "morning" ? "morning" : "evening";
-        const icon = r.exitPeriod === "morning" ? "☀" : "☾";
-        badgesHtml += `<div class="badge ${cls}${adminAttrs}" title="${PERIOD_LABEL[r.exitPeriod]}離開：${escapeHtml(r.mainName)}">${icon}◀ ${escapeHtml(r.mainName)}</div>`;
-      } else {
-        badgesHtml += `<div class="badge stay${adminAttrs}" title="停留中：${escapeHtml(r.mainName)}">• ${escapeHtml(r.mainName)}</div>`;
-      }
-    });
+
+    let holidayDot = "";
+    if(holidays.length > 0){
+      const titles = holidays.map(h => {
+        const rangeText = h.startDate ? `，${h.startDate} 起` : "";
+        const endText = h.endMode === "fixed" && h.endDate ? `至 ${h.endDate}` : "永遠重複";
+        return `${h.label}（每週${h.weekdays.map(i=>WEEKDAYS[i]).join('、')}${rangeText}，${endText}）`;
+      }).join("；");
+      holidayDot = `<span class="holiday-dot" title="${escapeHtml(titles)}">🎌</span>`;
+    }
 
     let capNote = "";
     const cap = Number(state.settings.capacity)||0;
@@ -526,7 +532,7 @@
       capNote = `<div class="cap-note ${full?'full':''}">位 ${occupants.length}/${cap}</div>`;
     }
 
-    const classes = ["cell"];
+    const classes = ["day-frame"];
     if(selectable && within) classes.push("selectable");
     if(!within) classes.push("disabled");
     if(isToday) classes.push("today");
@@ -537,13 +543,63 @@
     const dateLabel = adjacent ? `${dateObj.getMonth()+1}/${day}` : day;
 
     return `
-      <div class="${classes.join(" ")}" ${selectable && within ? `data-act="pick-day" data-date="${dateStr}"` : ""}>
-        <div class="datenum">${dateLabel}</div>
-        ${holidayHtml}
-        <div class="badges">${badgesHtml}</div>
+      <div class="${classes.join(" ")}" style="grid-column:${colIndex+1};grid-row:1 / -1;" ${selectable && within ? `data-act="pick-day" data-date="${dateStr}"` : ""}>
+        <div class="day-frame-top"><span class="datenum">${dateLabel}</span>${holidayDot}</div>
         ${capNote}
       </div>
     `;
+  }
+
+  // 一整週的預約橫條：計算重疊區間並分配「軌道(lane)」，同一筆預約全程同一色、同一列，不再逐日分開堆疊
+  function buildWeekGrid(weekDays, selectable){
+    const weekStartStr = weekDays[0].dateStr;
+    const weekEndStr = weekDays[6].dateStr;
+
+    const overlapping = state.reservations
+      .filter(r => r.start <= weekEndStr && r.end >= weekStartStr)
+      .sort((a,b) => cmpStr(a.start, b.start) || cmpStr(a.id, b.id));
+
+    const laneEnds = [];
+    const bars = [];
+    overlapping.forEach(r => {
+      const colStart = Math.max(0, diffDaysStr(weekStartStr, r.start));
+      const colEnd = Math.min(6, diffDaysStr(weekStartStr, r.end));
+      let lane = laneEnds.findIndex(endCol => endCol < colStart);
+      if(lane === -1){ lane = laneEnds.length; laneEnds.push(colEnd); }
+      else { laneEnds[lane] = colEnd; }
+      bars.push({
+        r, colStart, colEnd, lane,
+        isTrueStart: r.start >= weekStartStr,
+        isTrueEnd: r.end <= weekEndStr
+      });
+    });
+    const laneCount = bars.length ? Math.max(...bars.map(b=>b.lane)) + 1 : 0;
+
+    let framesHtml = "";
+    weekDays.forEach((d,i) => {
+      framesHtml += buildDayFrame(d.dateObj, d.day, i, selectable, d.adjacent);
+    });
+
+    let barsHtml = "";
+    bars.forEach(b => {
+      const r = b.r;
+      const cls = r.entryPeriod === "morning" ? "morning" : "evening";
+      const adminAttrs = state.isAdmin ? ` clickable" data-act="edit-open" data-id="${r.id}` : "";
+      let label = "";
+      if(b.isTrueStart){
+        const icon = r.entryPeriod === "morning" ? "☀" : "☾";
+        label += `▶${icon} `;
+      }
+      label += escapeHtml(r.mainName);
+      if(b.isTrueEnd){
+        const icon = r.exitPeriod === "morning" ? "☀" : "☾";
+        label += ` ${icon}◀`;
+      }
+      const title = `${PERIOD_LABEL[r.entryPeriod]}進入／${PERIOD_LABEL[r.exitPeriod]}離開：${escapeHtml(r.mainName)}（${r.start} ～ ${r.end}）`;
+      barsHtml += `<div class="resbar ${cls}${adminAttrs}" style="grid-column:${b.colStart+1} / ${b.colEnd+2};grid-row:${b.lane+2};" title="${title}">${label}</div>`;
+    });
+
+    return `<div class="week-grid" style="grid-template-rows:24px repeat(${Math.max(laneCount,1)},22px);">${framesHtml}${barsHtml}</div>`;
   }
 
   function renderCalendarCard(selectable){
@@ -555,29 +611,31 @@
     const t = todayDate();
     const isCurrentRealMonth = (y === t.getFullYear() && m === t.getMonth());
 
-    let cells = "";
+    let gridDays = [];
     // 補齊本月第一週前段，直接顯示上個月月底的日期（可視情況點選）
     if(startWeekday > 0){
       const prevMonthLastDay = new Date(y, m, 0).getDate();
       for(let i=0;i<startWeekday;i++){
         const day = prevMonthLastDay - startWeekday + 1 + i;
         const dateObj = new Date(y, m-1, day);
-        cells += buildDayCell(dateObj, day, selectable, true);
+        gridDays.push({ dateObj, day, adjacent: true, dateStr: toStr(dateObj) });
       }
     }
-    let cellCount = startWeekday;
     for(let day=1; day<=daysInMonth; day++){
       const dateObj = new Date(y,m,day);
-      cells += buildDayCell(dateObj, day, selectable, false);
-      cellCount++;
+      gridDays.push({ dateObj, day, adjacent: false, dateStr: toStr(dateObj) });
     }
     // 補齊最後一列，直接顯示下個月月初的日期（可點選）
-    const trailingNeeded = (7 - (cellCount % 7)) % 7;
-    if(trailingNeeded > 0){
-      for(let day=1; day<=trailingNeeded; day++){
-        const dateObj = new Date(y, m+1, day);
-        cells += buildDayCell(dateObj, day, selectable, true);
-      }
+    const trailingNeeded = (7 - (gridDays.length % 7)) % 7;
+    for(let day=1; day<=trailingNeeded; day++){
+      const dateObj = new Date(y, m+1, day);
+      gridDays.push({ dateObj, day, adjacent: true, dateStr: toStr(dateObj) });
+    }
+
+    let weeksHtml = "";
+    for(let w=0; w<gridDays.length/7; w++){
+      const weekDays = gridDays.slice(w*7, w*7+7);
+      weeksHtml += buildWeekGrid(weekDays, selectable);
     }
 
     return `
@@ -590,12 +648,11 @@
       </div>
       ${selectable && state.selStart ? `<div class="hint" style="margin-bottom:10px;background:var(--surface-2);padding:8px 10px;border-radius:8px;">已選範圍：<b>${state.selStart}</b> ～ <b>${state.selEnd}</b>，可切換月份繼續點選以調整範圍（點範圍外延伸、點範圍內重新選單日）</div>` : ""}
       <div class="weekdays">${WEEKDAYS.map(w=>`<span>${w}</span>`).join("")}</div>
-      <div class="grid">${cells}</div>
+      <div class="weeks-wrap">${weeksHtml}</div>
       <div class="legend">
-        <span><i class="dot morning"></i>☀ 早</span>
-        <span><i class="dot evening"></i>☾ 晚</span>
-        <span>▶ 進入　◀ 離開</span>
-        <span><i class="dot stay"></i>停留中</span>
+        <span><i class="dot morning"></i>☀ 早段進入</span>
+        <span><i class="dot evening"></i>☾ 晚段進入</span>
+        <span>▶ 進入　◀ 離開（同一筆預約整段同色顯示）</span>
         <span><i class="dot today"></i>今天</span>
         <span><i class="dot range"></i>已選範圍</span>
         <span style="border:1px dashed var(--border-strong); padding:1px 6px; border-radius:5px;">相鄰月份日期</span>
