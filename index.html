@@ -515,7 +515,7 @@
   }
 
   // 單一日期方格的外框（背景、邊框、日期數字、節日小圖示、容留人數），高度貫穿整週
-  function buildDayFrame(dateObj, day, colIndex, selectable, adjacent){
+function buildDayFrame(dateObj, day, colIndex, selectable, adjacent){
     const dateStr = toStr(dateObj);
     const within = isWithinWindow(dateStr);
     const isToday = dateStr === todayStr();
@@ -533,18 +533,14 @@
       holidayDot = `<span class="holiday-dot" title="${escapeHtml(titles)}">🎌</span>`;
     }
 
-    let capNote = "";
     const cap = Number(state.settings.capacity) || 0;
-    
-    // --- 這裡要先定義 full 變數 ---
-    const full = occupants.length >= cap; 
-    
+    const full = occupants.length >= cap; // <--- 這裡定義了 full
+    let capNote = "";
     if(cap > 0){
       capNote = `<div class="cap-note ${full?'full':''}" style="position: relative; margin-top: auto;">位 ${occupants.length}/${cap}</div>`;
     }
 
     const classes = ["day-frame"];
-    // ... 後面程式碼保持不變
     if(selectable && within) classes.push("selectable");
     if(!within) classes.push("disabled");
     if(isToday) classes.push("today");
@@ -557,7 +553,7 @@
     return `
       <div class="${classes.join(" ")}" style="grid-column:${colIndex+1}; grid-row: 1 / -1; display: flex; flex-direction: column;">
         <div class="day-frame-top" style="flex: 0 0 auto;"><span class="datenum">${dateLabel}</span>${holidayDot}</div>
-        <div class="cap-note ${full?'full':''}" style="position: relative; margin-top: auto;">${capNote}</div> 
+        ${capNote}
       </div>
     `;
   }
