@@ -104,17 +104,17 @@
   .weekdays{ display:grid; grid-template-columns: repeat(7,1fr); gap:6px; margin-bottom:6px; }
   .weekdays span{ text-align:center; font-size:11px; color: var(--ink-soft); font-weight:700; letter-spacing:1px; }
 
-  .weeks-wrap{ display:flex; flex-direction:column; gap:6px; }
+  .weeks-wrap{ display:flex; flex-direction:column; gap:8px; }
   .week-grid{
-    display:grid; grid-template-columns: repeat(7,1fr); gap:3px 6px; position:relative;
+    display:grid; grid-template-columns: repeat(7,1fr); gap:6px 8px; position:relative;
   }
   .day-frame{
     border-radius:10px; border:1px solid var(--border); background: var(--surface-2);
-    padding:5px 6px; position:relative; transition: all .12s ease;
+    padding:7px 8px; position:relative; transition: all .12s ease;
   }
-  .day-frame-top{ display:flex; align-items:center; justify-content:space-between; gap:4px; }
-  .day-frame .datenum{ font-size:12px; font-weight:700; color: var(--ink); }
-  .holiday-dot{ font-size:11px; cursor:default; }
+  .day-frame-top{ display:flex; align-items:center; justify-content:space-between; gap:4px; margin-bottom:2px; }
+  .day-frame .datenum{ font-size:13px; font-weight:700; color: var(--ink); }
+  .holiday-dot{ font-size:13px; cursor:default; }
   .day-frame.adjacent{ background: var(--bg-alt); border-style: dashed; }
   .day-frame.adjacent .datenum{ color: var(--ink-soft); font-weight:600; }
   .day-frame.holiday{ box-shadow: inset 0 3px 0 var(--gold); }
@@ -124,13 +124,13 @@
   .day-frame.disabled .datenum{ color: var(--ink-soft); }
   .day-frame.today{ border-color: var(--gold); border-width:2px; }
   .day-frame.in-range{ background: #DED2BC; border-color: var(--gold); }
-  .cap-note{ font-size:9px; color: var(--ink-soft); position:absolute; bottom:4px; left:6px; }
+  .cap-note{ font-size:9.5px; color: var(--ink-soft); position:absolute; bottom:5px; left:8px; }
   .cap-note.full{ color: var(--danger); font-weight:700; }
 
   .resbar{
-    align-self:center; height:20px; border-radius:6px; font-size:10.5px; font-weight:700;
-    display:flex; align-items:center; padding:0 7px; overflow:hidden; white-space:nowrap;
-    text-overflow:ellipsis; margin:0 1px;
+    align-self:center; height:26px; border-radius:7px; font-size:12px; font-weight:700;
+    display:flex; align-items:center; padding:0 9px; overflow:hidden; white-space:nowrap;
+    text-overflow:ellipsis; margin:0 2px;
   }
   .resbar.morning{ background: var(--morning-bg); color: var(--morning-ink); border:1px solid var(--morning); }
   .resbar.evening{ background: var(--evening-bg); color: var(--evening-ink); border:1px solid var(--evening); }
@@ -271,6 +271,8 @@
     formError: "",
     editingId: null,
     editingHolidayId: null,
+    pendingHolidayIcon: null,
+    pendingEditHolidayIcon: null,
     loaded: false
   };
 
@@ -599,7 +601,7 @@
       barsHtml += `<div class="resbar ${cls}${adminAttrs}" style="grid-column:${b.colStart+1} / ${b.colEnd+2};grid-row:${b.lane+2};" title="${title}">${label}</div>`;
     });
 
-    return `<div class="week-grid" style="grid-template-rows:24px repeat(${Math.max(laneCount,1)},22px);">${framesHtml}${barsHtml}</div>`;
+    return `<div class="week-grid" style="grid-template-rows:30px repeat(${Math.max(laneCount,1)},30px);">${framesHtml}${barsHtml}</div>`;
   }
 
   function renderCalendarCard(selectable){
@@ -748,6 +750,11 @@
         <input type="text" id="holidayLabel" placeholder="例如：公會周年慶">
       </div>
       <div class="field">
+        <label>節日圖示（選填，不上傳則使用預設 🎌）</label>
+        <input type="file" id="holidayIconFile" accept="image/*">
+        <img id="holidayIconPreview" style="display:none;width:32px;height:32px;object-fit:cover;border-radius:6px;border:1px solid var(--border-strong);margin-top:6px;">
+      </div>
+      <div class="field">
         <label>每週重複星期（可複選）</label>
         <div style="display:flex;gap:12px;flex-wrap:wrap;">
           ${WEEKDAYS.map((w,i) => `
@@ -778,11 +785,12 @@
       ${list.length === 0 ? `<div class="empty-state">尚未設定任何特別節日</div>` : `
         <div style="margin-top:16px;overflow-x:auto;">
         <table>
-          <thead><tr><th>名稱</th><th>重複星期</th><th>開始日期</th><th>結束時間</th><th>操作</th></tr></thead>
+          <thead><tr><th>圖示</th><th>名稱</th><th>重複星期</th><th>開始日期</th><th>結束時間</th><th>操作</th></tr></thead>
           <tbody>
             ${list.map(h => `
               <tr>
-                <td>🎌 ${escapeHtml(h.label)}</td>
+                <td>${h.icon ? `<img src="${h.icon}" style="width:22px;height:22px;object-fit:cover;border-radius:5px;">` : '🎌'}</td>
+                <td>${escapeHtml(h.label)}</td>
                 <td>每週${h.weekdays.map(i=>WEEKDAYS[i]).join('、')}</td>
                 <td>${h.startDate || "-"}</td>
                 <td>${h.endMode==='forever' ? '永遠重複' : ('至 '+h.endDate)}</td>
@@ -835,6 +843,29 @@
 
   function escapeHtml(s){
     return String(s || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  }
+
+  // 將上傳的圖片縮小成小圖示（避免資料庫存太大），回傳 base64 dataURL
+  function resizeImageToDataURL(file, maxDim){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let w = img.width, h = img.height;
+          if(w > h){ if(w > maxDim){ h = Math.round(h * maxDim / w); w = maxDim; } }
+          else { if(h > maxDim){ w = Math.round(w * maxDim / h); h = maxDim; } }
+          const canvas = document.createElement("canvas");
+          canvas.width = w; canvas.height = h;
+          canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL("image/png"));
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
   }
 
   // ---------- modals ----------
@@ -911,10 +942,16 @@
     const h = state.holidays.find(x=>x.id===id);
     if(!h) return;
     state.editingHolidayId = id;
+    state.pendingEditHolidayIcon = null;
     openModal(`
       <div class="modal" data-stop="1">
         <h3>編輯節日</h3>
         <div class="field"><label>節日名稱</label><input type="text" id="editHolidayLabel" value="${escapeHtml(h.label)}"></div>
+        <div class="field">
+          <label>節日圖示（選填，不更換則維持原本圖示）</label>
+          <input type="file" id="editHolidayIconFile" accept="image/*">
+          <img id="editHolidayIconPreview" src="${h.icon || ''}" style="display:${h.icon?'inline-block':'none'};width:32px;height:32px;object-fit:cover;border-radius:6px;border:1px solid var(--border-strong);margin-top:6px;">
+        </div>
         <div class="field">
           <label>每週重複星期（可複選）</label>
           <div style="display:flex;gap:10px;flex-wrap:wrap;">
@@ -1083,7 +1120,8 @@
     if(!startDate){ toast("請選擇開始日期", "error"); return; }
     if(endMode === "fixed" && !endDate){ toast("請選擇重複結束日期", "error"); return; }
     if(endMode === "fixed" && endDate < startDate){ toast("結束日期不能早於開始日期", "error"); return; }
-    state.holidays.push({ id: uid(), label, weekdays, startDate, endMode, endDate: endMode==="fixed" ? endDate : null });
+    state.holidays.push({ id: uid(), label, weekdays, startDate, endMode, endDate: endMode==="fixed" ? endDate : null, icon: state.pendingHolidayIcon || null });
+    state.pendingHolidayIcon = null;
     await saveHolidays();
     toast("節日已新增", "success");
     render();
@@ -1112,6 +1150,8 @@
     if(endMode === "fixed" && endDate < startDate){ errEl.textContent = "結束日期不能早於開始日期"; errEl.style.display = "block"; return; }
 
     h.label = label; h.weekdays = weekdays; h.startDate = startDate; h.endMode = endMode; h.endDate = endMode === "fixed" ? endDate : null;
+    if(state.pendingEditHolidayIcon){ h.icon = state.pendingEditHolidayIcon; }
+    state.pendingEditHolidayIcon = null;
     await saveHolidays();
     closeModal();
     toast("節日已更新", "success");
@@ -1175,6 +1215,26 @@
     if(e.target && e.target.name === "editHolidayEndMode"){
       const dateInput = document.getElementById("editHolidayEndDate");
       if(dateInput) dateInput.disabled = (e.target.value !== "fixed");
+    }
+    if(e.target && e.target.id === "holidayIconFile"){
+      const file = e.target.files[0];
+      if(file){
+        resizeImageToDataURL(file, 64).then(dataUrl => {
+          state.pendingHolidayIcon = dataUrl;
+          const preview = document.getElementById("holidayIconPreview");
+          if(preview){ preview.src = dataUrl; preview.style.display = "inline-block"; }
+        }).catch(() => toast("圖片讀取失敗，請換一張試試", "error"));
+      }
+    }
+    if(e.target && e.target.id === "editHolidayIconFile"){
+      const file = e.target.files[0];
+      if(file){
+        resizeImageToDataURL(file, 64).then(dataUrl => {
+          state.pendingEditHolidayIcon = dataUrl;
+          const preview = document.getElementById("editHolidayIconPreview");
+          if(preview){ preview.src = dataUrl; preview.style.display = "inline-block"; }
+        }).catch(() => toast("圖片讀取失敗，請換一張試試", "error"));
+      }
     }
   }
 
