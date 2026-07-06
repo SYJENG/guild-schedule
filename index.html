@@ -131,6 +131,8 @@
     align-self:center; height:26px; border-radius:7px; font-size:12px; font-weight:700;
     display:flex; align-items:center; padding:0 9px; overflow:hidden; white-space:nowrap;
     text-overflow:ellipsis; margin:0 2px;
+    margin-top: 5px; /* 增加一點與日期數字的間距 */
+    pointer-events: auto; /* 確保滑鼠懸停效果正常 */
   }
   .resbar.morning{ background: var(--morning-bg); color: var(--morning-ink); border:1px solid var(--morning); }
   .resbar.evening{ background: var(--evening-bg); color: var(--evening-ink); border:1px solid var(--evening); }
@@ -598,10 +600,10 @@
         label += ` ${icon}◀`;
       }
       const title = `${PERIOD_LABEL[r.entryPeriod]}進入／${PERIOD_LABEL[r.exitPeriod]}離開：${escapeHtml(r.mainName)}（${r.start} ～ ${r.end}）`;
-      barsHtml += `<div class="resbar ${cls}${adminAttrs}" style="grid-column:${b.colStart+1} / ${b.colEnd+2};grid-row:${b.lane+2};" title="${title}">${label}</div>`;
+      barsHtml += `<div class="resbar ${cls}${adminAttrs}" style="grid-column:${b.colStart+1} / ${b.colEnd+2};grid-row:${b.lane+2}; z-index: 10; position: relative;" title="${title}">${label}</div>`;
     });
 
-    return `<div class="week-grid" style="grid-template-rows:30px repeat(${Math.max(laneCount,1)},30px);">${framesHtml}${barsHtml}</div>`;
+    return `<div class="week-grid" style="grid-template-rows: auto; position: relative;">${framesHtml}${barsHtml}</div>`;
   }
 
   function renderCalendarCard(selectable){
