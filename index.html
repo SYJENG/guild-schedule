@@ -534,13 +534,17 @@
     }
 
     let capNote = "";
-    const cap = Number(state.settings.capacity)||0;
+    const cap = Number(state.settings.capacity) || 0;
+    
+    // --- 這裡要先定義 full 變數 ---
+    const full = occupants.length >= cap; 
+    
     if(cap > 0){
-      const full = occupants.length >= cap;
-      capNote = `<div class="cap-note ${full?'full':''}">位 ${occupants.length}/${cap}</div>`;
+      capNote = `<div class="cap-note ${full?'full':''}" style="position: relative; margin-top: auto;">位 ${occupants.length}/${cap}</div>`;
     }
 
     const classes = ["day-frame"];
+    // ... 後面程式碼保持不變
     if(selectable && within) classes.push("selectable");
     if(!within) classes.push("disabled");
     if(isToday) classes.push("today");
