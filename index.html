@@ -128,11 +128,15 @@
   .cap-note.full{ color: var(--danger); font-weight:700; }
 
   .resbar{
-    align-self:center; height:26px; border-radius:7px; font-size:12px; font-weight:700;
-    display:flex; align-items:center; padding:0 9px; overflow:hidden; white-space:nowrap;
-    text-overflow:ellipsis; margin:0 2px;
-    margin-top: 5px; /* 增加一點與日期數字的間距 */
-    pointer-events: auto; /* 確保滑鼠懸停效果正常 */
+    height: 24px;
+    margin: 2px 0;
+    z-index: 5; /* 確保在框框內 */
+    position: relative; /* 關鍵：不要用 absolute */
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    padding: 0 4px;
+    /* 移除掉會導致重疊的屬性 */
   }
   .resbar.morning{ background: var(--morning-bg); color: var(--morning-ink); border:1px solid var(--morning); }
   .resbar.evening{ background: var(--evening-bg); color: var(--evening-ink); border:1px solid var(--evening); }
@@ -547,9 +551,9 @@
     const dateLabel = adjacent ? `${dateObj.getMonth()+1}/${day}` : day;
 
     return `
-      <div class="${classes.join(" ")}" style="grid-column:${colIndex+1};grid-row:1 / -1;" ${selectable && within ? `data-act="pick-day" data-date="${dateStr}"` : ""}>
-        <div class="day-frame-top"><span class="datenum">${dateLabel}</span>${holidayDot}</div>
-        ${capNote}
+      <div class="${classes.join(" ")}" style="grid-column:${colIndex+1}; grid-row: 1 / -1; display: flex; flex-direction: column;">
+        <div class="day-frame-top" style="flex: 0 0 auto;"><span class="datenum">${dateLabel}</span>${holidayDot}</div>
+        <div class="cap-note ${full?'full':''}" style="position: relative; margin-top: auto;">${capNoteText}</div> 
       </div>
     `;
   }
@@ -603,7 +607,10 @@
       barsHtml += `<div class="resbar ${cls}${adminAttrs}" style="grid-column:${b.colStart+1} / ${b.colEnd+2};grid-row:${b.lane+2}; z-index: 10; position: relative;" title="${title}">${label}</div>`;
     });
 
-    return `<div class="week-grid" style="grid-template-rows: auto; position: relative;">${framesHtml}${barsHtml}</div>`;
+    return `<div class="week-grid" style="grid-template-columns: repeat(7, 1fr); grid-auto-rows: minmax(60px, auto); gap: 8px;">
+          ${framesHtml}
+          ${barsHtml}
+        </div>`;
   }
 
   function renderCalendarCard(selectable){
