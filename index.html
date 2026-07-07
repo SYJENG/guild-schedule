@@ -668,14 +668,10 @@
     const cellsHtml = entries.map(e => {
       const dateStr = toStr(e.dateObj);
       const isToday = dateStr === todayStr();
-      const inRange = state.selStart && state.selEnd && dateStr >= state.selStart && dateStr <= state.selEnd;
-      const within = isWithinWindow(dateStr);
       const isFull = cap > 0 && occupantsOn(dateStr).length >= cap;
       const classes = ["mini-cell"];
       if(e.adjacent) classes.push("adjacent");
       if(isToday) classes.push("today");
-      if(inRange) classes.push("in-range");
-      if(!within) classes.push("disabled");
       if(isFull) classes.push("full");
       const title = isFull ? ` title="已滿額"` : "";
       return `<div class="${classes.join(" ")}" data-act="mini-pick-day" data-date="${dateStr}"${title}>${e.day}${isFull ? '<span class="mini-full-dot"></span>' : ''}</div>`;
@@ -1285,7 +1281,7 @@
         const ds = t.getAttribute("data-date");
         const dObj = parseDateStr(ds);
         state.viewYear = dObj.getFullYear(); state.viewMonth = dObj.getMonth();
-        if(isWithinWindow(ds)){ handleDayPick(ds); } else { render(); }
+        render();
         break;
       }
       case "clear-sel": state.selStart=null; state.selEnd=null; state.formError=""; render(); break;
