@@ -103,45 +103,78 @@
 
   .weekdays{ display:grid; grid-template-columns: repeat(7,1fr); gap:6px; margin-bottom:6px; }
   .weekdays span{ text-align:center; font-size:11px; color: var(--ink-soft); font-weight:700; letter-spacing:1px; }
+  .grid{ display:grid; grid-template-columns: repeat(7,1fr); gap:6px; }
+  .weeks-wrap{ display:flex; flex-direction:column; gap:6px; }
+  .week-row{ position:relative; }
+  .day-grid{ display:grid; grid-template-columns: repeat(7,1fr); gap:6px; }
+  .event-layer{
+    position:absolute; left:0; right:0; display:grid;
+    grid-template-columns: repeat(7,1fr); column-gap:6px; pointer-events:none;
+  }
+  .event-bar{
+    pointer-events:auto; display:flex; align-items:center; gap:3px; padding:1px 6px;
+    font-size:10.5px; font-weight:700; color:#fff; overflow:hidden; white-space:nowrap;
+  }
+  .event-bar.bar-start{ border-top-left-radius:8px; border-bottom-left-radius:8px; padding-left:7px; }
+  .event-bar.bar-end{ border-top-right-radius:8px; border-bottom-right-radius:8px; padding-right:7px; }
+  .event-bar .bar-name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex-shrink:0; }
+  .event-bar .bar-note{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:500; opacity:.88; }
+  .event-bar[data-act]{ cursor:pointer; }
+  .event-bar[data-act]:hover{ filter:brightness(1.1); box-shadow:0 1px 5px rgba(0,0,0,0.28); }
+  .cell{
+    min-height:84px; border-radius:10px; border:1px solid var(--border);
+    background: var(--surface-2); padding:6px 6px 5px; position:relative;
+    display:flex; flex-direction:column; gap:3px; transition: all .12s ease;
+  }
+  .cell-bottom{
+    position:absolute; left:6px; right:6px; bottom:5px;
+    display:flex; align-items:flex-end; justify-content:space-between; gap:4px;
+  }
+  .holiday-icons{ display:flex; gap:3px; margin-left:auto; }
+  .holiday-icon{ display:inline-flex; }
 
-  .weeks-wrap{ display:flex; flex-direction:column; gap:8px; }
-  .week-grid{
-    display:grid; grid-template-columns: repeat(7,1fr); gap:6px 8px; position:relative;
+  .mini-cal-card{ padding:16px 18px; }
+  .mini-cal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+  .mini-cal-head b{ font-size:14px; font-family:"Noto Serif TC", serif; color:var(--ink); }
+  .mini-cal-head .cal-nav button{ width:24px; height:24px; font-size:12px; }
+  .mini-weekdays{ display:grid; grid-template-columns:repeat(7,1fr); margin-bottom:3px; }
+  .mini-weekdays span{ text-align:center; font-size:9.5px; color:var(--ink-soft); font-weight:700; }
+  .mini-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
+  .mini-cell{ text-align:center; font-size:11.5px; padding:6px 0; border-radius:6px; cursor:pointer; color:var(--ink); }
+  .mini-cell:hover{ background:var(--surface); box-shadow:var(--shadow); }
+  .mini-cell.adjacent{ color:var(--ink-soft); opacity:.5; }
+  .mini-cell.today{ background:var(--gold); color:#fff; font-weight:700; }
+  .mini-cell.in-range{ background:#DED2BC; }
+  .mini-cell.disabled{ opacity:.35; cursor:not-allowed; }
+  .mini-cell{ position:relative; }
+  .mini-cell.full{ background: var(--danger-bg); color: var(--danger); font-weight:700; }
+  .mini-full-dot{
+    position:absolute; left:50%; bottom:2px; transform:translateX(-50%);
+    width:4px; height:4px; border-radius:50%; background: var(--danger);
   }
-  .day-frame{
-    border-radius:10px; border:1px solid var(--border); background: var(--surface-2);
-    padding:7px 8px; position:relative; transition: all .12s ease;
+
+  .icon-picker{ display:flex; flex-wrap:wrap; gap:8px; }
+  .icon-option{
+    display:flex; align-items:center; gap:5px; background:var(--surface-2); border:1px solid var(--border-strong);
+    border-radius:8px; padding:6px 10px; font-size:12px; cursor:pointer; color:var(--ink-soft);
   }
-  .day-frame-top{ display:flex; align-items:center; justify-content:space-between; gap:4px; margin-bottom:2px; }
-  .day-frame .datenum{ font-size:13px; font-weight:700; color: var(--ink); }
-  .holiday-dot{ font-size:13px; cursor:default; }
-  .day-frame.adjacent{ background: var(--bg-alt); border-style: dashed; }
-  .day-frame.adjacent .datenum{ color: var(--ink-soft); font-weight:600; }
-  .day-frame.holiday{ box-shadow: inset 0 3px 0 var(--gold); }
-  .day-frame.selectable{ cursor:pointer; }
-  .day-frame.selectable:hover{ border-color: var(--accent); box-shadow: 0 0 0 2px rgba(126,140,116,0.15); }
-  .day-frame.disabled{ opacity:.6; background: var(--bg-alt); }
-  .day-frame.disabled .datenum{ color: var(--ink-soft); }
-  .day-frame.today{ border-color: var(--gold); border-width:2px; }
-  .day-frame.in-range{ background: #DED2BC; border-color: var(--gold); }
-  .cap-note{ font-size:9.5px; color: var(--ink-soft); position:absolute; bottom:5px; left:8px; }
+  .icon-option input{ margin:0; }
+  .icon-option:has(input:checked){ border-color:var(--accent); background:var(--morning-bg); color:var(--accent-dark); font-weight:700; }
+  .cell.empty{ background:transparent; border-color:transparent; }
+  .cell.adjacent{ background: var(--bg-alt); border-style: dashed; }
+  .cell.adjacent .datenum{ color: var(--ink-soft); font-weight:600; }
+  .cell.holiday{ box-shadow: inset 0 3px 0 var(--gold); }
+  .cell.selectable{ cursor:pointer; }
+  .cell.selectable:hover{ border-color: var(--accent); box-shadow: 0 0 0 2px rgba(126,140,116,0.15); }
+  .cell.disabled{ opacity:.6; background: var(--bg-alt); }
+  .cell.today{ border-color: var(--gold); border-width:2px; }
+  .cell.in-range{ background: #DED2BC; border-color: var(--gold); }
+  .cell.range-end{ background: #D4C4A4; }
+  .cell .datenum{ font-size:12px; font-weight:700; color: var(--ink); }
+  .cell.disabled .datenum{ color: var(--ink-soft); }
+  .cap-note{ font-size:9px; color: var(--ink-soft); }
+  .cap-note-wrap{ display:flex; align-items:flex-end; }
   .cap-note.full{ color: var(--danger); font-weight:700; }
-
-  .resbar{
-    height: 24px;
-    margin: 2px 0;
-    z-index: 5; /* 確保在框框內 */
-    position: relative; /* 關鍵：不要用 absolute */
-    font-size: 11px;
-    display: flex;
-    align-items: center;
-    padding: 0 4px;
-    /* 移除掉會導致重疊的屬性 */
-  }
-  .resbar.morning{ background: var(--morning-bg); color: var(--morning-ink); border:1px solid var(--morning); }
-  .resbar.evening{ background: var(--evening-bg); color: var(--evening-ink); border:1px solid var(--evening); }
-  .resbar.clickable{ cursor:pointer; }
-  .resbar.clickable:hover{ filter: brightness(0.94); }
 
   .legend{ display:flex; gap:16px; margin-top:14px; font-size:12px; color: var(--ink-soft); flex-wrap:wrap; }
   .legend span{ display:inline-flex; align-items:center; gap:6px; }
@@ -150,6 +183,7 @@
   .dot.evening{ background: var(--evening); }
   .dot.today{ background: var(--gold); }
   .dot.range{ background: #D4C4A4; }
+  .dot.stay{ background: var(--stay); }
 
   .form-title{ font-size:16px; margin-bottom:4px; }
   .form-sub{ font-size:12px; color: var(--ink-soft); margin:0 0 16px; }
@@ -252,12 +286,32 @@
 
   const ADMIN_PASSWORD = "admin123"; // 管理者密碼，可自行修改
 
-  // Supabase 設定：取代 Claude Artifact 專屬的 window.storage
-  const SUPABASE_URL = "https://ipuiikywfbqwuypenshl.supabase.co";
-  const SUPABASE_KEY = "sb_publishable_DfYbmgIEjEVZu21j5wf1kQ_-KygmVxx";
-
   const WEEKDAYS = ["日","一","二","三","四","五","六"];
   const PERIOD_LABEL = { morning: "早段", evening: "晚段" };
+
+  const ICON_LIBRARY = [
+    { key: "island", type: "image", value: "data:image/jpeg;base64,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", label: "\u6d77\u5cf6" },
+    { key: "mineral", type: "image", value: "data:image/jpeg;base64,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", label: "\u77ff\u77f3" },
+  ];
+  function getIconDef(key){ return ICON_LIBRARY.find(i=>i.key===key) || ICON_LIBRARY[0]; }
+  function iconHtml(key, size){
+    const def = getIconDef(key);
+    const sz = size || 16;
+    if(def.type === "image") return `<img src="${def.value}" alt="${def.label}" style="width:${sz}px;height:${sz}px;object-fit:contain;vertical-align:middle;border-radius:3px;">`;
+    return `<span style="font-size:${sz}px;line-height:1;vertical-align:middle;">${def.value}</span>`;
+  }
+
+  // 每筆預約依 id 雜湊固定分配一種顏色，讓月曆上不同預約一眼可辨
+  const RESERVATION_COLOR_PALETTE = [
+    "#8FA377", "#9B84A0", "#C0925E", "#6E9B94", "#BD7F6E",
+    "#7E8CB9", "#A6906B", "#5E9B7A", "#B98BAE", "#8C9E5E"
+  ];
+  function reservationColor(id){
+    let hash = 0;
+    const s = String(id || "");
+    for(let i=0;i<s.length;i++){ hash = (hash * 31 + s.charCodeAt(i)) >>> 0; }
+    return RESERVATION_COLOR_PALETTE[hash % RESERVATION_COLOR_PALETTE.length];
+  }
 
   let state = {
     reservations: [],
@@ -267,6 +321,8 @@
     tab: "calendar", // calendar | admin
     viewYear: null,
     viewMonth: null, // 0-indexed
+    miniViewYear: null,
+    miniViewMonth: null, // 0-indexed, independent from the main calendar's view
     selStart: null,
     selEnd: null,
     entryPeriod: "morning",
@@ -277,8 +333,6 @@
     formError: "",
     editingId: null,
     editingHolidayId: null,
-    pendingHolidayIcon: null,
-    pendingEditHolidayIcon: null,
     loaded: false
   };
 
@@ -300,76 +354,55 @@
   }
   function cmpStr(a,b){ return a < b ? -1 : (a > b ? 1 : 0); }
 
-  // ---------- storage (Supabase kv_store 表) ----------
-  async function sbGet(key){
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/kv_store?key=eq.${encodeURIComponent(key)}&select=value`, {
-      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-    });
-    if(!res.ok) throw new Error("Supabase get failed: " + res.status);
-    const data = await res.json();
-    return data.length > 0 ? data[0].value : null;
-  }
-  async function sbSet(key, value){
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/kv_store`, {
-      method: "POST",
-      headers: {
-        apikey: SUPABASE_KEY,
-        Authorization: `Bearer ${SUPABASE_KEY}`,
-        "Content-Type": "application/json",
-        Prefer: "resolution=merge-duplicates"
-      },
-      body: JSON.stringify({ key, value, updated_at: new Date().toISOString() })
-    });
-    if(!res.ok) throw new Error("Supabase set failed: " + res.status);
-  }
-
+  // ---------- storage ----------
   async function loadAll(){
     try{
-      const v = await sbGet("reservations");
-      state.reservations = v ? JSON.parse(v) : [];
+      const r = await window.storage.get("reservations", true);
+      state.reservations = r ? JSON.parse(r.value) : [];
     }catch(e){ state.reservations = []; }
     try{
-      const v = await sbGet("settings");
-      state.settings = v ? JSON.parse(v) : state.settings;
+      const s = await window.storage.get("settings", true);
+      state.settings = s ? JSON.parse(s.value) : state.settings;
     }catch(e){ /* keep default */ }
     try{
-      const v = await sbGet("holidays");
-      state.holidays = v ? JSON.parse(v) : [];
+      const h = await window.storage.get("holidays", true);
+      state.holidays = h ? JSON.parse(h.value) : [];
     }catch(e){ state.holidays = []; }
     try{
-      state.isAdmin = localStorage.getItem("guildIsAdmin") === "true";
+      const a = await window.storage.get("isAdmin", false);
+      state.isAdmin = !!(a && a.value === "true");
     }catch(e){ state.isAdmin = false; }
     state.loaded = true;
   }
   async function saveReservations(){
-    try{ await sbSet("reservations", JSON.stringify(state.reservations)); }
+    try{ await window.storage.set("reservations", JSON.stringify(state.reservations), true); }
     catch(e){ toast("儲存預約失敗，請稍後再試", "error"); }
   }
   async function saveSettings(){
-    try{ await sbSet("settings", JSON.stringify(state.settings)); }
+    try{ await window.storage.set("settings", JSON.stringify(state.settings), true); }
     catch(e){ toast("儲存設定失敗，請稍後再試", "error"); }
   }
   async function saveHolidays(){
-    try{ await sbSet("holidays", JSON.stringify(state.holidays)); }
+    try{ await window.storage.set("holidays", JSON.stringify(state.holidays), true); }
     catch(e){ toast("儲存節日失敗，請稍後再試", "error"); }
   }
   async function persistAdminFlag(val){
-    try{ localStorage.setItem("guildIsAdmin", val ? "true" : "false"); }catch(e){}
+    try{ await window.storage.set("isAdmin", val ? "true" : "false", false); }catch(e){}
   }
   async function refreshShared(){
     try{
-      const v = await sbGet("reservations");
-      state.reservations = v ? JSON.parse(v) : [];
+      const r = await window.storage.get("reservations", true);
+      state.reservations = r ? JSON.parse(r.value) : [];
     }catch(e){}
     try{
-      const v = await sbGet("settings");
-      state.settings = v ? JSON.parse(v) : state.settings;
+      const s = await window.storage.get("settings", true);
+      state.settings = s ? JSON.parse(s.value) : state.settings;
     }catch(e){}
     try{
-      const v = await sbGet("holidays");
-      state.holidays = v ? JSON.parse(v) : [];
+      const h = await window.storage.get("holidays", true);
+      state.holidays = h ? JSON.parse(h.value) : [];
     }catch(e){}
-    // 若使用者正在輸入框中打字（例如節日名稱、姓名、備註），暫緩重繪，避免蓋掉尚未送出的內容
+    // 若使用者正在輸入框中打字（例如姓名、備註），暫緩重繪，避免蓋掉尚未送出的內容
     const activeTag = document.activeElement && document.activeElement.tagName;
     const isEditingField = activeTag === "INPUT" || activeTag === "SELECT" || activeTag === "TEXTAREA";
     if(!document.getElementById("modalRoot").firstChild && !isEditingField){ render(); }
@@ -417,6 +450,11 @@
       state.viewYear = t.getFullYear();
       state.viewMonth = t.getMonth();
     }
+    if(state.miniViewYear === null){
+      const t = todayDate();
+      state.miniViewYear = t.getFullYear();
+      state.miniViewMonth = t.getMonth();
+    }
     renderTopbarControls();
     const root = document.getElementById("viewRoot");
     if(!state.isAdmin){
@@ -446,7 +484,10 @@
   function renderUserView(){
     return `
       <div class="layout">
-        <div class="card">${renderCalendarCard(true)}</div>
+        <div>
+          <div class="card mini-cal-card">${renderMiniCalendar()}</div>
+          <div class="card">${renderCalendarCard(true)}</div>
+        </div>
         <div class="card">${renderBookingForm()}</div>
       </div>
     `;
@@ -463,7 +504,10 @@
     }
     return `
       <div class="layout">
-        <div class="card">${renderCalendarCard(true)}</div>
+        <div>
+          <div class="card mini-cal-card">${renderMiniCalendar()}</div>
+          <div class="card">${renderCalendarCard(true)}</div>
+        </div>
         <div>
           <div class="card">${renderBookingForm()}</div>
           <div class="card">${renderAdminSidePanel()}</div>
@@ -510,37 +554,32 @@
     return `<div class="alert-banner" style="padding:10px 14px;"><h3 style="margin-bottom:6px;">🔔 今日須離開</h3><div class="alert-list">${leaving.map(r=>`<span class="alert-chip">${escapeHtml(r.mainName)}（${PERIOD_LABEL[r.exitPeriod]}）</span>`).join("")}</div></div>`;
   }
 
-  function diffDaysStr(aStr, bStr){
-    return Math.round((parseDateStr(bStr) - parseDateStr(aStr)) / 86400000);
-  }
-
-  // 單一日期方格的外框（背景、邊框、日期數字、節日小圖示、容留人數），高度貫穿整週
-function buildDayFrame(dateObj, day, colIndex, selectable, adjacent){
+  function buildDayCell(dateObj, day, selectable, adjacent, minHeightPx){
     const dateStr = toStr(dateObj);
     const within = isWithinWindow(dateStr);
     const isToday = dateStr === todayStr();
     const inRange = state.selStart && state.selEnd && dateStr >= state.selStart && dateStr <= state.selEnd;
     const holidays = holidaysOn(dateStr);
-    const occupants = occupantsOn(dateStr);
 
-    let holidayDot = "";
-    if(holidays.length > 0){
-      const titles = holidays.map(h => {
+    let holidayIconsHtml = "";
+    if(holidays.length){
+      holidayIconsHtml = `<div class="holiday-icons">${holidays.map(h => {
         const rangeText = h.startDate ? `，${h.startDate} 起` : "";
         const endText = h.endMode === "fixed" && h.endDate ? `至 ${h.endDate}` : "永遠重複";
-        return `${h.label}（每週${h.weekdays.map(i=>WEEKDAYS[i]).join('、')}${rangeText}，${endText}）`;
-      }).join("；");
-      holidayDot = `<span class="holiday-dot" title="${escapeHtml(titles)}">🎌</span>`;
+        const title = `${escapeHtml(h.label)}（每週${h.weekdays.map(i=>WEEKDAYS[i]).join('、')}${rangeText}，${endText}）`;
+        return `<span class="holiday-icon" title="${title}">${iconHtml(h.icon || "island", 16)}</span>`;
+      }).join("")}</div>`;
     }
 
-    const cap = Number(state.settings.capacity) || 0;
-    const full = occupants.length >= cap; // <--- 這裡定義了 full
+    const occupants = occupantsOn(dateStr);
     let capNote = "";
+    const cap = Number(state.settings.capacity)||0;
     if(cap > 0){
-      capNote = `<div class="cap-note ${full?'full':''}" style="position: relative; margin-top: auto;">位 ${occupants.length}/${cap}</div>`;
+      const full = occupants.length >= cap;
+      capNote = `<div class="cap-note ${full?'full':''}">位 ${occupants.length}/${cap}</div>`;
     }
 
-    const classes = ["day-frame"];
+    const classes = ["cell"];
     if(selectable && within) classes.push("selectable");
     if(!within) classes.push("disabled");
     if(isToday) classes.push("today");
@@ -549,68 +588,112 @@ function buildDayFrame(dateObj, day, colIndex, selectable, adjacent){
     if(holidays.length > 0) classes.push("holiday");
 
     const dateLabel = adjacent ? `${dateObj.getMonth()+1}/${day}` : day;
+    const styleAttr = minHeightPx ? ` style="min-height:${minHeightPx}px;"` : "";
 
     return `
-      <div class="${classes.join(" ")}" style="grid-column:${colIndex+1}; grid-row: 1 / -1; display: flex; flex-direction: column;">
-        <div class="day-frame-top" style="flex: 0 0 auto;"><span class="datenum">${dateLabel}</span>${holidayDot}</div>
-        ${capNote}
+      <div class="${classes.join(" ")}"${styleAttr} ${selectable && within ? `data-act="pick-day" data-date="${dateStr}"` : ""}>
+        <div class="datenum">${dateLabel}</div>
+        <div class="cell-bottom">
+          <div class="cap-note-wrap">${capNote}</div>
+          ${holidayIconsHtml}
+        </div>
       </div>
     `;
   }
 
-  // 一整週的預約橫條：計算重疊區間並分配「軌道(lane)」，同一筆預約全程同一色、同一列，不再逐日分開堆疊
-  function buildWeekGrid(weekDays, selectable){
-    const weekStartStr = weekDays[0].dateStr;
-    const weekEndStr = weekDays[6].dateStr;
-
-    const overlapping = state.reservations
-      .filter(r => r.start <= weekEndStr && r.end >= weekStartStr)
-      .sort((a,b) => cmpStr(a.start, b.start) || cmpStr(a.id, b.id));
-
-    const laneEnds = [];
-    const bars = [];
+  // 依「週」為單位，計算該週內所有跨天預約的橫條區段與所需的排列軌道（避免重疊）
+  function buildWeekSegments(dateStrs){
+    const weekStart = dateStrs[0], weekEnd = dateStrs[6];
+    const overlapping = state.reservations.filter(r => r.start <= weekEnd && r.end >= weekStart);
+    overlapping.sort((a,b) => cmpStr(a.start,b.start) || cmpStr(b.end,a.end));
+    const laneLastCol = [];
+    const segments = [];
     overlapping.forEach(r => {
-      const colStart = Math.max(0, diffDaysStr(weekStartStr, r.start));
-      const colEnd = Math.min(6, diffDaysStr(weekStartStr, r.end));
-      let lane = laneEnds.findIndex(endCol => endCol < colStart);
-      if(lane === -1){ lane = laneEnds.length; laneEnds.push(colEnd); }
-      else { laneEnds[lane] = colEnd; }
-      bars.push({
-        r, colStart, colEnd, lane,
-        isTrueStart: r.start >= weekStartStr,
-        isTrueEnd: r.end <= weekEndStr
-      });
+      let colStart = dateStrs.findIndex(d => d >= r.start);
+      if(colStart === -1) colStart = 0;
+      let colEnd = -1;
+      for(let i=6;i>=0;i--){ if(dateStrs[i] <= r.end){ colEnd = i; break; } }
+      if(colEnd === -1) colEnd = 6;
+      const isTrueStart = dateStrs[colStart] === r.start;
+      const isTrueEnd = dateStrs[colEnd] === r.end;
+      let lane = laneLastCol.findIndex(lastCol => lastCol < colStart);
+      if(lane === -1){ lane = laneLastCol.length; laneLastCol.push(colEnd); }
+      else { laneLastCol[lane] = colEnd; }
+      segments.push({ r, colStart, colEnd, isTrueStart, isTrueEnd, lane });
     });
-    const laneCount = bars.length ? Math.max(...bars.map(b=>b.lane)) + 1 : 0;
+    return { segments, laneCount: laneLastCol.length };
+  }
 
-    let framesHtml = "";
-    weekDays.forEach((d,i) => {
-      framesHtml += buildDayFrame(d.dateObj, d.day, i, selectable, d.adjacent);
-    });
+  function renderEventBar(seg){
+    const r = seg.r;
+    const classes = ["event-bar"];
+    if(seg.isTrueStart) classes.push("bar-start");
+    if(seg.isTrueEnd) classes.push("bar-end");
+    const adminAttrs = state.isAdmin ? ` data-act="edit-open" data-id="${r.id}"` : "";
+    const entryIcon = r.entryPeriod === "morning" ? "☀" : "☾";
+    const exitIcon = r.exitPeriod === "morning" ? "☀" : "☾";
+    let inner = "";
+    if(seg.isTrueStart) inner += `<span class="bar-icon">${entryIcon}</span>`;
+    inner += `<span class="bar-name">${escapeHtml(r.mainName)}</span>`;
+    if(r.note) inner += `<span class="bar-note">・${escapeHtml(r.note)}</span>`;
+    if(seg.isTrueEnd) inner += `<span class="bar-icon">${exitIcon}</span>`;
+    const noteText = r.note ? `　備註：${escapeHtml(r.note)}` : "";
+    const title = `${escapeHtml(r.mainName)}（小號：${escapeHtml(r.altName)}）　${PERIOD_LABEL[r.entryPeriod]}進入 ${r.start} ～ ${PERIOD_LABEL[r.exitPeriod]}離開 ${r.end}${noteText}`;
+    const bg = reservationColor(r.id);
+    const style = `grid-column:${seg.colStart+1} / ${seg.colEnd+2}; grid-row:${seg.lane+1}; background:${bg};`;
+    return `<div class="${classes.join(" ")}" style="${style}" title="${escapeHtml(title)}"${adminAttrs}>${inner}</div>`;
+  }
 
-    let barsHtml = "";
-    bars.forEach(b => {
-      const r = b.r;
-      const cls = r.entryPeriod === "morning" ? "morning" : "evening";
-      const adminAttrs = state.isAdmin ? ` clickable" data-act="edit-open" data-id="${r.id}` : "";
-      let label = "";
-      if(b.isTrueStart){
-        const icon = r.entryPeriod === "morning" ? "☀" : "☾";
-        label += `▶${icon} `;
+  function renderMiniCalendar(){
+    const y = state.miniViewYear, m = state.miniViewMonth;
+    const first = new Date(y, m, 1);
+    const startWeekday = first.getDay();
+    const daysInMonth = new Date(y, m+1, 0).getDate();
+    const t = todayDate();
+    const isCurrentRealMonth = (y === t.getFullYear() && m === t.getMonth());
+    const cap = Number(state.settings.capacity) || 0;
+
+    const entries = [];
+    if(startWeekday > 0){
+      const prevMonthLastDay = new Date(y, m, 0).getDate();
+      for(let i=0;i<startWeekday;i++){
+        const day = prevMonthLastDay - startWeekday + 1 + i;
+        entries.push({ dateObj: new Date(y, m-1, day), day, adjacent:true });
       }
-      label += escapeHtml(r.mainName);
-      if(b.isTrueEnd){
-        const icon = r.exitPeriod === "morning" ? "☀" : "☾";
-        label += ` ${icon}◀`;
-      }
-      const title = `${PERIOD_LABEL[r.entryPeriod]}進入／${PERIOD_LABEL[r.exitPeriod]}離開：${escapeHtml(r.mainName)}（${r.start} ～ ${r.end}）`;
-      barsHtml += `<div class="resbar ${cls}${adminAttrs}" style="grid-column:${b.colStart+1} / ${b.colEnd+2};grid-row:${b.lane+2}; z-index: 10; position: relative;" title="${title}">${label}</div>`;
-    });
+    }
+    for(let day=1; day<=daysInMonth; day++) entries.push({ dateObj: new Date(y,m,day), day, adjacent:false });
+    const trailingNeeded = (7 - (entries.length % 7)) % 7;
+    for(let day=1; day<=trailingNeeded; day++) entries.push({ dateObj: new Date(y, m+1, day), day, adjacent:true });
 
-    return `<div class="week-grid" style="grid-template-columns: repeat(7, 1fr); grid-auto-rows: minmax(60px, auto); gap: 8px;">
-          ${framesHtml}
-          ${barsHtml}
-        </div>`;
+    const cellsHtml = entries.map(e => {
+      const dateStr = toStr(e.dateObj);
+      const isToday = dateStr === todayStr();
+      const inRange = state.selStart && state.selEnd && dateStr >= state.selStart && dateStr <= state.selEnd;
+      const within = isWithinWindow(dateStr);
+      const isFull = cap > 0 && occupantsOn(dateStr).length >= cap;
+      const classes = ["mini-cell"];
+      if(e.adjacent) classes.push("adjacent");
+      if(isToday) classes.push("today");
+      if(inRange) classes.push("in-range");
+      if(!within) classes.push("disabled");
+      if(isFull) classes.push("full");
+      const title = isFull ? ` title="已滿額"` : "";
+      return `<div class="${classes.join(" ")}" data-act="mini-pick-day" data-date="${dateStr}"${title}>${e.day}${isFull ? '<span class="mini-full-dot"></span>' : ''}</div>`;
+    }).join("");
+
+    return `
+      <div class="mini-cal">
+        <div class="mini-cal-head">
+          <b>${y} 年 ${m+1} 月</b>
+          <div class="cal-nav">
+            <button data-act="mini-prev-month" ${isCurrentRealMonth?"disabled":""}>‹</button>
+            <button data-act="mini-next-month">›</button>
+          </div>
+        </div>
+        <div class="mini-weekdays">${WEEKDAYS.map(w=>`<span>${w}</span>`).join("")}</div>
+        <div class="mini-grid">${cellsHtml}</div>
+      </div>
+    `;
   }
 
   function renderCalendarCard(selectable){
@@ -622,32 +705,45 @@ function buildDayFrame(dateObj, day, colIndex, selectable, adjacent){
     const t = todayDate();
     const isCurrentRealMonth = (y === t.getFullYear() && m === t.getMonth());
 
-    let gridDays = [];
+    const dayEntries = [];
     // 補齊本月第一週前段，直接顯示上個月月底的日期（可視情況點選）
     if(startWeekday > 0){
       const prevMonthLastDay = new Date(y, m, 0).getDate();
       for(let i=0;i<startWeekday;i++){
         const day = prevMonthLastDay - startWeekday + 1 + i;
-        const dateObj = new Date(y, m-1, day);
-        gridDays.push({ dateObj, day, adjacent: true, dateStr: toStr(dateObj) });
+        dayEntries.push({ dateObj: new Date(y, m-1, day), day, adjacent:true });
       }
     }
     for(let day=1; day<=daysInMonth; day++){
-      const dateObj = new Date(y,m,day);
-      gridDays.push({ dateObj, day, adjacent: false, dateStr: toStr(dateObj) });
+      dayEntries.push({ dateObj: new Date(y,m,day), day, adjacent:false });
     }
     // 補齊最後一列，直接顯示下個月月初的日期（可點選）
-    const trailingNeeded = (7 - (gridDays.length % 7)) % 7;
+    const trailingNeeded = (7 - (dayEntries.length % 7)) % 7;
     for(let day=1; day<=trailingNeeded; day++){
-      const dateObj = new Date(y, m+1, day);
-      gridDays.push({ dateObj, day, adjacent: true, dateStr: toStr(dateObj) });
+      dayEntries.push({ dateObj: new Date(y, m+1, day), day, adjacent:true });
     }
 
-    let weeksHtml = "";
-    for(let w=0; w<gridDays.length/7; w++){
-      const weekDays = gridDays.slice(w*7, w*7+7);
-      weeksHtml += buildWeekGrid(weekDays, selectable);
+    const BASE_H = 50, LANE_H = 20, LANE_GAP = 4, TOP_OFFSET = 22;
+
+    // 先計算每一週所需要的橫條軌道數，取全月最大值，讓所有週的日期列高度一致固定
+    const weeksData = [];
+    for(let w=0; w<dayEntries.length; w+=7){
+      const weekEntries = dayEntries.slice(w, w+7);
+      const dateStrs = weekEntries.map(e => toStr(e.dateObj));
+      const { segments, laneCount } = buildWeekSegments(dateStrs);
+      weeksData.push({ weekEntries, segments, laneCount });
     }
+    const maxLaneCount = weeksData.reduce((max, wd) => Math.max(max, wd.laneCount), 0);
+    const fixedCellHeightPx = Math.max(84, BASE_H + maxLaneCount*(LANE_H+LANE_GAP));
+
+    let weeksHtml = "";
+    weeksData.forEach(wd => {
+      const dayGridHtml = wd.weekEntries.map(e => buildDayCell(e.dateObj, e.day, selectable, e.adjacent, fixedCellHeightPx)).join("");
+      const eventLayerHtml = maxLaneCount > 0
+        ? `<div class="event-layer" style="top:${TOP_OFFSET}px; grid-template-rows:repeat(${maxLaneCount},${LANE_H}px); row-gap:${LANE_GAP}px;">${wd.segments.map(renderEventBar).join("")}</div>`
+        : "";
+      weeksHtml += `<div class="week-row"><div class="day-grid">${dayGridHtml}</div>${eventLayerHtml}</div>`;
+    });
 
     return `
       <div class="cal-head">
@@ -661,13 +757,12 @@ function buildDayFrame(dateObj, day, colIndex, selectable, adjacent){
       <div class="weekdays">${WEEKDAYS.map(w=>`<span>${w}</span>`).join("")}</div>
       <div class="weeks-wrap">${weeksHtml}</div>
       <div class="legend">
-        <span><i class="dot morning"></i>☀ 早段進入</span>
-        <span><i class="dot evening"></i>☾ 晚段進入</span>
-        <span>▶ 進入　◀ 離開（同一筆預約整段同色顯示）</span>
+        <span>每筆預約使用不同顏色色條，方便區分</span>
+        <span>☀／☾ 顯示於色條首尾，代表進入・離開時段</span>
         <span><i class="dot today"></i>今天</span>
         <span><i class="dot range"></i>已選範圍</span>
         <span style="border:1px dashed var(--border-strong); padding:1px 6px; border-radius:5px;">相鄰月份日期</span>
-        <span>🎌 特別節日</span>
+        <span>${iconHtml('island',13)} 特別節日圖示（顯示於格子右下角）</span>
       </div>
     `;
   }
@@ -753,15 +848,17 @@ function buildDayFrame(dateObj, day, colIndex, selectable, adjacent){
     const list = [...state.holidays].sort((a,b)=>cmpStr(a.startDate||"", b.startDate||""));
     return `
       <div class="form-title">特別節日設定</div>
-      <p class="form-sub">標記特別節日，會顯示在所有使用者的月曆上；直接點選每週固定重複的星期</p>
+      <p class="form-sub">標記特別節日，會顯示在所有使用者的月曆上；圖示名稱即為節日名稱，不需另外輸入</p>
       <div class="field">
-        <label>節日名稱</label>
-        <input type="text" id="holidayLabel" placeholder="例如：公會周年慶">
-      </div>
-      <div class="field">
-        <label>節日圖示（選填，不上傳則使用預設 🎌）</label>
-        <input type="file" id="holidayIconFile" accept="image/*">
-        <img id="holidayIconPreview" style="display:none;width:32px;height:32px;object-fit:cover;border-radius:6px;border:1px solid var(--border-strong);margin-top:6px;">
+        <label>圖示（同時也是節日名稱，會顯示在月曆格子右下角）</label>
+        <div class="icon-picker">
+          ${ICON_LIBRARY.map(ic => `
+            <label class="icon-option">
+              <input type="radio" name="holidayIcon" value="${ic.key}" ${ic.key==='island'?'checked':''}>
+              ${iconHtml(ic.key,18)}<span>${escapeHtml(ic.label)}</span>
+            </label>
+          `).join("")}
+        </div>
       </div>
       <div class="field">
         <label>每週重複星期（可複選）</label>
@@ -794,12 +891,11 @@ function buildDayFrame(dateObj, day, colIndex, selectable, adjacent){
       ${list.length === 0 ? `<div class="empty-state">尚未設定任何特別節日</div>` : `
         <div style="margin-top:16px;overflow-x:auto;">
         <table>
-          <thead><tr><th>圖示</th><th>名稱</th><th>重複星期</th><th>開始日期</th><th>結束時間</th><th>操作</th></tr></thead>
+          <thead><tr><th>名稱</th><th>重複星期</th><th>開始日期</th><th>結束時間</th><th>操作</th></tr></thead>
           <tbody>
             ${list.map(h => `
               <tr>
-                <td>${h.icon ? `<img src="${h.icon}" style="width:22px;height:22px;object-fit:cover;border-radius:5px;">` : '🎌'}</td>
-                <td>${escapeHtml(h.label)}</td>
+                <td>${iconHtml(h.icon || 'island', 16)} ${escapeHtml(h.label)}</td>
                 <td>每週${h.weekdays.map(i=>WEEKDAYS[i]).join('、')}</td>
                 <td>${h.startDate || "-"}</td>
                 <td>${h.endMode==='forever' ? '永遠重複' : ('至 '+h.endDate)}</td>
@@ -852,29 +948,6 @@ function buildDayFrame(dateObj, day, colIndex, selectable, adjacent){
 
   function escapeHtml(s){
     return String(s || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-  }
-
-  // 將上傳的圖片縮小成小圖示（避免資料庫存太大），回傳 base64 dataURL
-  function resizeImageToDataURL(file, maxDim){
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          let w = img.width, h = img.height;
-          if(w > h){ if(w > maxDim){ h = Math.round(h * maxDim / w); w = maxDim; } }
-          else { if(h > maxDim){ w = Math.round(w * maxDim / h); h = maxDim; } }
-          const canvas = document.createElement("canvas");
-          canvas.width = w; canvas.height = h;
-          canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-          resolve(canvas.toDataURL("image/png"));
-        };
-        img.onerror = reject;
-        img.src = e.target.result;
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
   }
 
   // ---------- modals ----------
@@ -951,15 +1024,19 @@ function buildDayFrame(dateObj, day, colIndex, selectable, adjacent){
     const h = state.holidays.find(x=>x.id===id);
     if(!h) return;
     state.editingHolidayId = id;
-    state.pendingEditHolidayIcon = null;
     openModal(`
       <div class="modal" data-stop="1">
         <h3>編輯節日</h3>
-        <div class="field"><label>節日名稱</label><input type="text" id="editHolidayLabel" value="${escapeHtml(h.label)}"></div>
         <div class="field">
-          <label>節日圖示（選填，不更換則維持原本圖示）</label>
-          <input type="file" id="editHolidayIconFile" accept="image/*">
-          <img id="editHolidayIconPreview" src="${h.icon || ''}" style="display:${h.icon?'inline-block':'none'};width:32px;height:32px;object-fit:cover;border-radius:6px;border:1px solid var(--border-strong);margin-top:6px;">
+          <label>圖示（同時也是節日名稱，會顯示在月曆格子右下角）</label>
+          <div class="icon-picker">
+            ${ICON_LIBRARY.map(ic => `
+              <label class="icon-option">
+                <input type="radio" name="editHolidayIcon" value="${ic.key}" ${(h.icon||'island')===ic.key?'checked':''}>
+                ${iconHtml(ic.key,18)}<span>${escapeHtml(ic.label)}</span>
+              </label>
+            `).join("")}
+          </div>
         </div>
         <div class="field">
           <label>每週重複星期（可複選）</label>
@@ -1119,18 +1196,18 @@ function buildDayFrame(dateObj, day, colIndex, selectable, adjacent){
   }
 
   async function addHoliday(){
-    const label = document.getElementById("holidayLabel").value.trim();
     const weekdays = Array.from(document.querySelectorAll(".holidayWeekdayChk:checked")).map(c => Number(c.value));
     const startDate = document.getElementById("holidayStartDate").value;
     const endMode = document.querySelector('input[name="holidayEndMode"]:checked').value;
     const endDate = document.getElementById("holidayEndDate").value;
-    if(!label){ toast("請輸入節日名稱", "error"); return; }
+    const iconEl = document.querySelector('input[name="holidayIcon"]:checked');
+    const icon = iconEl ? iconEl.value : "island";
+    const label = getIconDef(icon).label;
     if(weekdays.length === 0){ toast("請至少選擇一個重複星期", "error"); return; }
     if(!startDate){ toast("請選擇開始日期", "error"); return; }
     if(endMode === "fixed" && !endDate){ toast("請選擇重複結束日期", "error"); return; }
     if(endMode === "fixed" && endDate < startDate){ toast("結束日期不能早於開始日期", "error"); return; }
-    state.holidays.push({ id: uid(), label, weekdays, startDate, endMode, endDate: endMode==="fixed" ? endDate : null, icon: state.pendingHolidayIcon || null });
-    state.pendingHolidayIcon = null;
+    state.holidays.push({ id: uid(), label, weekdays, startDate, endMode, endDate: endMode==="fixed" ? endDate : null, icon });
     await saveHolidays();
     toast("節日已新增", "success");
     render();
@@ -1146,21 +1223,20 @@ function buildDayFrame(dateObj, day, colIndex, selectable, adjacent){
   async function saveHolidayEdit(){
     const h = state.holidays.find(x => x.id === state.editingHolidayId);
     if(!h) return;
-    const label = document.getElementById("editHolidayLabel").value.trim();
     const weekdays = Array.from(document.querySelectorAll(".editHolidayWeekdayChk:checked")).map(c => Number(c.value));
     const startDate = document.getElementById("editHolidayStartDate").value;
     const endMode = document.querySelector('input[name="editHolidayEndMode"]:checked').value;
     const endDate = document.getElementById("editHolidayEndDate").value;
+    const iconEl = document.querySelector('input[name="editHolidayIcon"]:checked');
+    const icon = iconEl ? iconEl.value : "island";
+    const label = getIconDef(icon).label;
     const errEl = document.getElementById("editHolidayErr");
-    if(!label){ errEl.textContent = "請輸入節日名稱"; errEl.style.display = "block"; return; }
     if(weekdays.length === 0){ errEl.textContent = "請至少選擇一個重複星期"; errEl.style.display = "block"; return; }
     if(!startDate){ errEl.textContent = "請選擇開始日期"; errEl.style.display = "block"; return; }
     if(endMode === "fixed" && !endDate){ errEl.textContent = "請選擇重複結束日期"; errEl.style.display = "block"; return; }
     if(endMode === "fixed" && endDate < startDate){ errEl.textContent = "結束日期不能早於開始日期"; errEl.style.display = "block"; return; }
 
-    h.label = label; h.weekdays = weekdays; h.startDate = startDate; h.endMode = endMode; h.endDate = endMode === "fixed" ? endDate : null;
-    if(state.pendingEditHolidayIcon){ h.icon = state.pendingEditHolidayIcon; }
-    state.pendingEditHolidayIcon = null;
+    h.label = label; h.weekdays = weekdays; h.startDate = startDate; h.endMode = endMode; h.endDate = endMode === "fixed" ? endDate : null; h.icon = icon;
     await saveHolidays();
     closeModal();
     toast("節日已更新", "success");
@@ -1195,7 +1271,23 @@ function buildDayFrame(dateObj, day, colIndex, selectable, adjacent){
         break;
       }
       case "next-month": state.viewMonth++; if(state.viewMonth>11){ state.viewMonth=0; state.viewYear++; } render(); break;
+      case "mini-prev-month": {
+        const t0 = todayDate();
+        if(!(state.miniViewYear===t0.getFullYear() && state.miniViewMonth===t0.getMonth())){
+          state.miniViewMonth--; if(state.miniViewMonth<0){ state.miniViewMonth=11; state.miniViewYear--; }
+          render();
+        }
+        break;
+      }
+      case "mini-next-month": state.miniViewMonth++; if(state.miniViewMonth>11){ state.miniViewMonth=0; state.miniViewYear++; } render(); break;
       case "pick-day": handleDayPick(t.getAttribute("data-date")); break;
+      case "mini-pick-day": {
+        const ds = t.getAttribute("data-date");
+        const dObj = parseDateStr(ds);
+        state.viewYear = dObj.getFullYear(); state.viewMonth = dObj.getMonth();
+        if(isWithinWindow(ds)){ handleDayPick(ds); } else { render(); }
+        break;
+      }
       case "clear-sel": state.selStart=null; state.selEnd=null; state.formError=""; render(); break;
       case "set-entry-period": state.entryPeriod = t.getAttribute("data-period"); render(); break;
       case "set-exit-period": state.exitPeriod = t.getAttribute("data-period"); render(); break;
@@ -1225,26 +1317,6 @@ function buildDayFrame(dateObj, day, colIndex, selectable, adjacent){
       const dateInput = document.getElementById("editHolidayEndDate");
       if(dateInput) dateInput.disabled = (e.target.value !== "fixed");
     }
-    if(e.target && e.target.id === "holidayIconFile"){
-      const file = e.target.files[0];
-      if(file){
-        resizeImageToDataURL(file, 64).then(dataUrl => {
-          state.pendingHolidayIcon = dataUrl;
-          const preview = document.getElementById("holidayIconPreview");
-          if(preview){ preview.src = dataUrl; preview.style.display = "inline-block"; }
-        }).catch(() => toast("圖片讀取失敗，請換一張試試", "error"));
-      }
-    }
-    if(e.target && e.target.id === "editHolidayIconFile"){
-      const file = e.target.files[0];
-      if(file){
-        resizeImageToDataURL(file, 64).then(dataUrl => {
-          state.pendingEditHolidayIcon = dataUrl;
-          const preview = document.getElementById("editHolidayIconPreview");
-          if(preview){ preview.src = dataUrl; preview.style.display = "inline-block"; }
-        }).catch(() => toast("圖片讀取失敗，請換一張試試", "error"));
-      }
-    }
   }
 
   function onBodyInput(e){
@@ -1253,18 +1325,11 @@ function buildDayFrame(dateObj, day, colIndex, selectable, adjacent){
     if(e.target && e.target.id === "noteInput"){ state.note = e.target.value; }
   }
 
-  // 修改 init 函數，確保即使讀取失敗，網頁也能渲染
+  // ---------- init ----------
   async function init(){
     document.getElementById("viewRoot").innerHTML = `<div class="empty-state">載入中…</div>`;
-    
-    try {
-        await loadAll();
-    } catch (e) {
-        console.error("載入資料失敗，改為讀取本地快取", e);
-        // 確保即使讀取失敗，state 也有基本初始值，讓畫面可以出來
-    }
-    
-    render(); // 無論如何都嘗試渲染
+    await loadAll();
+    render();
     document.body.addEventListener("click", onBodyClick);
     document.body.addEventListener("change", onBodyChange);
     document.body.addEventListener("input", onBodyInput);
