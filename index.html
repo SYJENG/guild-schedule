@@ -401,14 +401,21 @@
   // 注意：這裡故意沒有 kvSet／直接寫入函式。收緊 RLS 後，anon key 已無法直接寫入 kv_store，
   // 所有寫入都必須經過 kv-write 這支 Edge Function（見 callEdgeFunction），這是刻意的安全設計。
 
-  async function loadAll(){
-   // 這裡的 kvGet 應該要確保就算資料庫連不上，也要回傳預設的 []
-    state.reservations = await kvGet("reservations", []);
+async function loadAll(){
+    // 將讀取後的資料增加一層 JSON.parse 的安全保護
+    function parseSafe(data, defaultValue) {
+      if (Array.isArray(data)) return data; // 已經是陣列就直接回傳
+      if (typeof data === 'string') {
+        try { return JSON.parse(data); } catch(e) { return defaultValue; }
+      }
+      return defaultValue;
+    }
+
+    state.reservations = parseSafe(await kvGet("reservations", []), []);
     state.settings = await kvGet("settings", state.settings);
-    state.holidays = await kvGet("holidays", []); // 確保這裡有傳入預設值
-    state.customIcons = await kvGet("customIcons", []);
+    state.holidays = parseSafe(await kvGet("holidays", []), []);
+    state.customIcons = parseSafe(await kvGet("customIcons", []), []);
     
-    // isAdmin／密碼是「僅限本機」的登入狀態，不應公開存在共用資料庫裡，改存瀏覽器 localStorage
     try{
       state.isAdmin = localStorage.getItem("isAdmin") === "true";
       state.adminPassword = localStorage.getItem("adminPassword") || "";
