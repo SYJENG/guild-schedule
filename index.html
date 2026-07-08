@@ -402,20 +402,24 @@
   // 所有寫入都必須經過 kv-write 這支 Edge Function（見 callEdgeFunction），這是刻意的安全設計。
 
 async function loadAll(){
-    // 將讀取後的資料增加一層 JSON.parse 的安全保護
-    function parseSafe(data, defaultValue) {
-      if (Array.isArray(data)) return data; // 已經是陣列就直接回傳
+    // 輔助函式：確保資料一定是陣列
+    function ensureArray(data) {
+      if (Array.isArray(data)) return data;
       if (typeof data === 'string') {
-        try { return JSON.parse(data); } catch(e) { return defaultValue; }
+        try { return JSON.parse(data); } catch(e) { return []; }
       }
-      return defaultValue;
+      return [];
     }
 
-    state.reservations = parseSafe(await kvGet("reservations", []), []);
+    const rawReservations = await kvGet("reservations", []);
+    const rawHolidays = await kvGet("holidays", []);
+    const rawCustomIcons = await kvGet("customIcons", []);
+
+    state.reservations = ensureArray(rawReservations);
+    state.holidays = ensureArray(rawHolidays);
+    state.customIcons = ensureArray(rawCustomIcons);
     state.settings = await kvGet("settings", state.settings);
-    state.holidays = parseSafe(await kvGet("holidays", []), []);
-    state.customIcons = parseSafe(await kvGet("customIcons", []), []);
-    
+
     try{
       state.isAdmin = localStorage.getItem("isAdmin") === "true";
       state.adminPassword = localStorage.getItem("adminPassword") || "";
