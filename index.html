@@ -286,13 +286,31 @@
 (function(){
   "use strict";
 
-  const ADMIN_PASSWORD = "admin123"; // 管理者密碼，可自行修改
-
   // ---------- Supabase 連線設定 ----------
+  // 管理密碼「不再」存在前端程式碼裡：登入與所有寫入動作都會送到 Edge Function，
+  // 由伺服器端比對密碼（存在 Supabase 的 Secret 裡），瀏覽器端完全看不到密碼本身。
   const SUPABASE_URL = "https://ipuiikywfbqwuypenshl.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_DfYbmgIEjEVZu21j5wf1kQ_-KygmVxx";
   const KV_TABLE = "kv_store"; // key(text, PK) / value(jsonb) / updated_at(timestamptz)
+  const EDGE_FUNCTION_URL = SUPABASE_URL + "/functions/v1/kv-write";
   const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // 呼叫 kv-write Edge Function（新增預約 / 管理者寫入 / 密碼驗證，皆透過此函式送出）
+  async function callEdgeFunction(body){
+    const res = await fetch(EDGE_FUNCTION_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + SUPABASE_ANON_KEY,
+        "apikey": SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify(body)
+    });
+    let data = {};
+    try{ data = await res.json(); }catch(e){ /* ignore parse error */ }
+    if(!res.ok){ throw new Error(data.error || "伺服器發生錯誤，請稍後再試"); }
+    return data;
+  }
 
   const WEEKDAYS = ["日","一","二","三","四","五","六"];
   const PERIOD_LABEL = { morning: "早段", evening: "晚段" };
@@ -328,6 +346,7 @@
     holidays: [],
     customIcons: [],
     isAdmin: false,
+    adminPassword: "",
     tab: "calendar", // calendar | admin
     viewYear: null,
     viewMonth: null, // 0-indexed
@@ -379,46 +398,38 @@
       return defaultValue;
     }
   }
-  async function kvSet(key, value){
-    try{
-      const { error } = await supabaseClient
-        .from(KV_TABLE)
-        .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: "key" });
-      if(error) throw error;
-      return true;
-    }catch(e){
-      console.error("kvSet failed for key="+key, e);
-      return false;
-    }
-  }
+  // 注意：這裡故意沒有 kvSet／直接寫入函式。收緊 RLS 後，anon key 已無法直接寫入 kv_store，
+  // 所有寫入都必須經過 kv-write 這支 Edge Function（見 callEdgeFunction），這是刻意的安全設計。
 
   async function loadAll(){
     state.reservations = await kvGet("reservations", []);
     state.settings = await kvGet("settings", state.settings);
     state.holidays = await kvGet("holidays", []);
     state.customIcons = await kvGet("customIcons", []);
-    // isAdmin 是「僅限本機」的登入狀態，不應公開存在共用資料庫裡，改存瀏覽器 localStorage
-    try{ state.isAdmin = localStorage.getItem("isAdmin") === "true"; }catch(e){ state.isAdmin = false; }
+    // isAdmin／密碼是「僅限本機」的登入狀態，不應公開存在共用資料庫裡，改存瀏覽器 localStorage
+    try{
+      state.isAdmin = localStorage.getItem("isAdmin") === "true";
+      state.adminPassword = localStorage.getItem("adminPassword") || "";
+    }catch(e){ state.isAdmin = false; state.adminPassword = ""; }
     state.loaded = true;
   }
+  // 以下四個 save 函式都改為透過 Edge Function 的 admin-write 動作寫入，
+  // 由伺服器端重新比對密碼，前端存的密碼只是「附上去給伺服器驗證用」，本身不具直接寫入資料庫的權限。
   async function saveReservations(){
-    const ok = await kvSet("reservations", state.reservations);
-    if(!ok) toast("儲存預約失敗，請稍後再試", "error");
+    try{ await callEdgeFunction({ action: "admin-write", password: state.adminPassword, key: "reservations", value: state.reservations }); }
+    catch(e){ toast(e.message || "儲存預約失敗，請稍後再試", "error"); }
   }
   async function saveSettings(){
-    const ok = await kvSet("settings", state.settings);
-    if(!ok) toast("儲存設定失敗，請稍後再試", "error");
+    try{ await callEdgeFunction({ action: "admin-write", password: state.adminPassword, key: "settings", value: state.settings }); }
+    catch(e){ toast(e.message || "儲存設定失敗，請稍後再試", "error"); }
   }
   async function saveHolidays(){
-    const ok = await kvSet("holidays", state.holidays);
-    if(!ok) toast("儲存節日失敗，請稍後再試", "error");
+    try{ await callEdgeFunction({ action: "admin-write", password: state.adminPassword, key: "holidays", value: state.holidays }); }
+    catch(e){ toast(e.message || "儲存節日失敗，請稍後再試", "error"); }
   }
   async function saveCustomIcons(){
-    const ok = await kvSet("customIcons", state.customIcons);
-    if(!ok) toast("儲存圖示失敗，請稍後再試", "error");
-  }
-  async function persistAdminFlag(val){
-    try{ localStorage.setItem("isAdmin", val ? "true" : "false"); }catch(e){}
+    try{ await callEdgeFunction({ action: "admin-write", password: state.adminPassword, key: "customIcons", value: state.customIcons }); }
+    catch(e){ toast(e.message || "儲存圖示失敗，請稍後再試", "error"); }
   }
   async function refreshShared(){
     const [reservations, settings, holidays, customIcons] = await Promise.all([
@@ -1164,21 +1175,27 @@
 
   async function doLogin(){
     const val = document.getElementById("loginPassInput").value;
-    if(val === ADMIN_PASSWORD){
+    const errEl = document.getElementById("loginErr");
+    errEl.style.display = "none";
+    try{
+      await callEdgeFunction({ action: "verify", password: val });
       state.isAdmin = true;
-      await persistAdminFlag(true);
+      state.adminPassword = val;
+      try{ localStorage.setItem("isAdmin", "true"); localStorage.setItem("adminPassword", val); }catch(e){}
       closeModal();
       toast("登入成功", "success");
       render();
-    } else {
-      document.getElementById("loginErr").style.display = "block";
+    }catch(e){
+      errEl.textContent = e.message || "密碼錯誤，請再試一次";
+      errEl.style.display = "block";
     }
   }
 
   async function doLogout(){
     state.isAdmin = false;
+    state.adminPassword = "";
     state.tab = "calendar";
-    await persistAdminFlag(false);
+    try{ localStorage.removeItem("isAdmin"); localStorage.removeItem("adminPassword"); }catch(e){}
     toast("已登出");
     render();
   }
@@ -1232,13 +1249,21 @@
       d.setDate(d.getDate()+1);
     }
 
-    const rec = { id: uid(), start, end, entryPeriod: state.entryPeriod, exitPeriod: state.exitPeriod, mainName, altName, note, createdAt: Date.now() };
-    state.reservations.push(rec);
-    await saveReservations();
-
-    state.selStart = null; state.selEnd = null; state.mainName = ""; state.altName = ""; state.note = ""; state.formError = "";
-    toast("預約成功！", "success");
-    render();
+    // 實際新增動作交給 Edge Function 處理：伺服器端會重新檢查容量與日期範圍，
+    // 且只會「附加一筆」，不會覆蓋既有資料，因此不需要密碼也能安全地開放給所有人使用。
+    try{
+      const result = await callEdgeFunction({
+        action: "add-reservation",
+        value: { start, end, entryPeriod: state.entryPeriod, exitPeriod: state.exitPeriod, mainName, altName, note }
+      });
+      state.reservations.push(result.reservation);
+      state.selStart = null; state.selEnd = null; state.mainName = ""; state.altName = ""; state.note = ""; state.formError = "";
+      toast("預約成功！", "success");
+      render();
+    }catch(e){
+      state.formError = e.message || "預約失敗，請稍後再試";
+      render();
+    }
   }
 
   async function saveEdit(){
