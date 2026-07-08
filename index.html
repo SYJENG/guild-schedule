@@ -453,16 +453,21 @@ async function loadAll(){
     catch(e){ toast(e.message || "儲存圖示失敗，請稍後再試", "error"); }
   }
   async function refreshShared(){
+    // 這裡同樣需要加上解析保護，否則每次定時更新都會把已經修好的陣列又變回字串！
     const [reservations, settings, holidays, customIcons] = await Promise.all([
-      kvGet("reservations", state.reservations),
+      kvGet("reservations", []),
       kvGet("settings", state.settings),
-      kvGet("holidays", state.holidays),
-      kvGet("customIcons", state.customIcons)
+      kvGet("holidays", []),
+      kvGet("customIcons", [])
     ]);
-    state.reservations = reservations;
+    
+    // 使用您剛剛定義的 forceArray 函式 (如果這在 scope 內)
+    state.reservations = forceArray(reservations);
     state.settings = settings;
-    state.holidays = holidays;
-    state.customIcons = customIcons;
+    state.holidays = forceArray(holidays);
+    state.customIcons = forceArray(customIcons);
+    
+ 
     // 若使用者正在輸入框中打字（例如姓名、備註），暫緩重繪，避免蓋掉尚未送出的內容
     const activeTag = document.activeElement && document.activeElement.tagName;
     const isEditingField = activeTag === "INPUT" || activeTag === "SELECT" || activeTag === "TEXTAREA";
@@ -600,7 +605,10 @@ function holidaysOn(dateStr){
 
   function renderTodayAlert(){
     const t = todayStr();
-    const leaving = state.reservations.filter(r => r.end === t);
+    // 強制將 state.reservations 視為陣列，如果是字串或其他格式則回傳空陣列
+    const reservations = Array.isArray(state.reservations) ? state.reservations : [];
+    const leaving = reservations.filter(r => r.end === t);
+    
     return `
       <div class="alert-banner">
         <h3>🔔 今日提醒：即將離開的成員</h3>
