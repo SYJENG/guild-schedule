@@ -646,7 +646,12 @@ function occupantsOn(dateStr, excludeId){
   // 依「週」為單位，計算該週內所有跨天預約的橫條區段與所需的排列軌道（避免重疊）
   function buildWeekSegments(dateStrs){
     const weekStart = dateStrs[0], weekEnd = dateStrs[6];
+    
+    // 增加保護：如果 state.reservations 不是陣列，則直接回傳空的結構
+    if (!Array.isArray(state.reservations)) return { segments: [], laneCount: 0 };
+    
     const overlapping = state.reservations.filter(r => r.start <= weekEnd && r.end >= weekStart);
+    // ... 後續程式碼保持不變 ...
     overlapping.sort((a,b) => cmpStr(a.start,b.start) || cmpStr(b.end,a.end));
     const laneLastCol = [];
     const segments = [];
