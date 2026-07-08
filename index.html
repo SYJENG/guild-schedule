@@ -402,10 +402,12 @@
   // 所有寫入都必須經過 kv-write 這支 Edge Function（見 callEdgeFunction），這是刻意的安全設計。
 
   async function loadAll(){
+   // 這裡的 kvGet 應該要確保就算資料庫連不上，也要回傳預設的 []
     state.reservations = await kvGet("reservations", []);
     state.settings = await kvGet("settings", state.settings);
-    state.holidays = await kvGet("holidays", []);
+    state.holidays = await kvGet("holidays", []); // 確保這裡有傳入預設值
     state.customIcons = await kvGet("customIcons", []);
+    
     // isAdmin／密碼是「僅限本機」的登入狀態，不應公開存在共用資料庫裡，改存瀏覽器 localStorage
     try{
       state.isAdmin = localStorage.getItem("isAdmin") === "true";
@@ -450,17 +452,18 @@
 
   // ---------- helpers ----------
 function occupantsOn(dateStr, excludeId){
-    // 增加檢查：如果 state.reservations 不是陣列，就回傳空陣列 []
-    if (!Array.isArray(state.reservations)) return [];
-    
-    return state.reservations.filter(r =>
+    // 強制確保 state.reservations 是陣列
+    const resList = Array.isArray(state.reservations) ? state.reservations : [];
+    return resList.filter(r =>
       r.id !== excludeId && dateStr >= r.start && dateStr <= r.end
     );
   }
   // 計算某日期符合哪些特別節日設定（依每週星期幾＋可選的開始／結束日期）
-  function holidaysOn(dateStr){
+function holidaysOn(dateStr){
     const dow = parseDateStr(dateStr).getDay();
-    return state.holidays.filter(h => {
+    // 強制確保 state.holidays 是陣列
+    const holList = Array.isArray(state.holidays) ? state.holidays : [];
+    return holList.filter(h => {
       if(!h.weekdays.includes(dow)) return false;
       if(h.startDate && dateStr < h.startDate) return false;
       if(h.endMode === "fixed" && h.endDate && dateStr > h.endDate) return false;
@@ -644,13 +647,11 @@ function occupantsOn(dateStr, excludeId){
   }
 
   // 依「週」為單位，計算該週內所有跨天預約的橫條區段與所需的排列軌道（避免重疊）
-  function buildWeekSegments(dateStrs){
+ function buildWeekSegments(dateStrs){
     const weekStart = dateStrs[0], weekEnd = dateStrs[6];
-    
-    // 增加保護：如果 state.reservations 不是陣列，則直接回傳空的結構
-    if (!Array.isArray(state.reservations)) return { segments: [], laneCount: 0 };
-    
-    const overlapping = state.reservations.filter(r => r.start <= weekEnd && r.end >= weekStart);
+    // 強制確保 state.reservations 是陣列
+    const resList = Array.isArray(state.reservations) ? state.reservations : [];
+    const overlapping = resList.filter(r => r.start <= weekEnd && r.end >= weekStart);
     // ... 後續程式碼保持不變 ...
     overlapping.sort((a,b) => cmpStr(a.start,b.start) || cmpStr(b.end,a.end));
     const laneLastCol = [];
