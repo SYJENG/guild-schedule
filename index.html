@@ -449,8 +449,10 @@
   }
 
   // ---------- helpers ----------
-  // 所有涵蓋此日期的預約（不分早晚），用於「開放位子」總容留人數計算
-  function occupantsOn(dateStr, excludeId){
+function occupantsOn(dateStr, excludeId){
+    // 增加檢查：如果 state.reservations 不是陣列，就回傳空陣列 []
+    if (!Array.isArray(state.reservations)) return [];
+    
     return state.reservations.filter(r =>
       r.id !== excludeId && dateStr >= r.start && dateStr <= r.end
     );
