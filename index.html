@@ -402,29 +402,36 @@
   // 所有寫入都必須經過 kv-write 這支 Edge Function（見 callEdgeFunction），這是刻意的安全設計。
 
 async function loadAll(){
-    // 輔助函式：自動判斷並解析字串格式的 JSON
-    function parseKvData(data, defaultValue) {
-      if (Array.isArray(data)) return data; // 如果已經是陣列，直接回傳
+    // 強制解析函式：檢查是否為陣列，若不是（如：字串），則嘗試解析
+    function forceArray(data) {
+      if (Array.isArray(data)) return data; 
       if (typeof data === 'string') {
-        try { return JSON.parse(data); } catch(e) { return defaultValue; }
+        try {
+          return JSON.parse(data);
+        } catch(e) {
+          console.error("解析資料失敗:", data);
+          return [];
+        }
       }
-      return defaultValue;
+      return [];
     }
 
-    // 分別載入並解析
-    const resData = await kvGet("reservations", []);
-    const holData = await kvGet("holidays", []);
-    const iconData = await kvGet("customIcons", []);
+    const resRaw = await kvGet("reservations", []);
+    const holRaw = await kvGet("holidays", []);
+    const iconRaw = await kvGet("customIcons", []);
 
-    state.reservations = parseKvData(resData, []);
-    state.holidays = parseKvData(holData, []);
-    state.customIcons = parseKvData(iconData, []);
-    state.settings = await kvGet("settings", state.settings);
+    state.reservations = forceArray(resRaw);
+    state.holidays = forceArray(holRaw);
+    state.customIcons = forceArray(iconRaw);
     
+    // 設定檔通常是物件，不需要強制轉陣列
+    state.settings = await kvGet("settings", state.settings);
+
     try{
       state.isAdmin = localStorage.getItem("isAdmin") === "true";
       state.adminPassword = localStorage.getItem("adminPassword") || "";
     }catch(e){ state.isAdmin = false; state.adminPassword = ""; }
+    
     state.loaded = true;
   }
   // 以下四個 save 函式都改為透過 Edge Function 的 admin-write 動作寫入，
