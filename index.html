@@ -329,11 +329,7 @@
   } 
 
  const BUILTIN_ICONS = [
-    { key: "island", type: "image", value: "data:image/jpeg;base64,...", label: "海島" },
-    // 將下面的 "矿石" 改為 "守衛星晶"
-    { key: "mineral", type: "image", value: "data:image/jpeg;base64,...", label: "守衛星晶" }, 
-    { key: "hero", type: "image", value: "data:image/jpeg;base64,...", label: "英雄擂台" },
-  ];
+    
   function getAllIcons(){ return BUILTIN_ICONS.concat(state.customIcons || []); }
   function getIconDef(key){ return getAllIcons().find(i=>i.key===key) || BUILTIN_ICONS[0]; }
   function iconHtml(key, size){
