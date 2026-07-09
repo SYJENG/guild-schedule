@@ -283,28 +283,37 @@
 <div id="toast" class="toast"></div>
 
 <script>
-// 使用 DOMContentLoaded 確保頁面元素都已準備好
-document.addEventListener('DOMContentLoaded', () => {
-  // 將原本的 addEventListener 移動到這裡
-  const iconLabel = document.getElementById("newIconLabel");
-  if (iconLabel) {
-    iconLabel.addEventListener("input", (e) => {
-      localStorage.setItem("temp_iconLabel", e.target.value);
-    });
-  }
-});
-
 (function(){
   "use strict";
 
-  // ---------- Supabase 連線設定 ----------
-  // 管理密碼「不再」存在前端程式碼裡：登入與所有寫入動作都會送到 Edge Function，
-  // 由伺服器端比對密碼（存在 Supabase 的 Secret 裡），瀏覽器端完全看不到密碼本身。
-  const SUPABASE_URL = "https://ipuiikywfbqwuypenshl.supabase.co";
-  const SUPABASE_ANON_KEY = "sb_publishable_DfYbmgIEjEVZu21j5wf1kQ_-KygmVxx";
-  const KV_TABLE = "kv_store"; // key(text, PK) / value(jsonb) / updated_at(timestamptz)
-  const EDGE_FUNCTION_URL = SUPABASE_URL + "/functions/v1/kv-write";
-  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // 等待 DOM 元素全部載入完成
+  document.addEventListener('DOMContentLoaded', () => {
+    
+    // 1. 恢復暫存資料的邏輯
+    const iconLabelInput = document.getElementById("newIconLabel");
+    if (iconLabelInput) {
+      const savedLabel = localStorage.getItem("temp_iconLabel");
+      if(savedLabel) iconLabelInput.value = savedLabel;
+      
+      // 2. 綁定輸入監聽，確保隨時自動存檔
+      iconLabelInput.addEventListener("input", (e) => {
+        localStorage.setItem("temp_iconLabel", e.target.value);
+      });
+    }
+
+    // 3. 原有的初始化邏輯 (init)
+    async function init() {
+      document.getElementById("viewRoot").innerHTML = `<div class="empty-state">載入中…</div>`;
+      await loadAll();
+      render();
+      document.body.addEventListener("click", onBodyClick);
+      document.body.addEventListener("change", onBodyChange);
+      document.body.addEventListener("input", onBodyInput);
+      setInterval(refreshShared, 15000);
+    }
+    
+    init();
+  });
 
   // 呼叫 kv-write Edge Function（新增預約 / 管理者寫入 / 密碼驗證，皆透過此函式送出）
   async function callEdgeFunction(body){
@@ -1544,30 +1553,15 @@ function holidaysOn(dateStr){
     if(e.target && e.target.id === "altNameInput"){ state.altName = e.target.value; }
     if(e.target && e.target.id === "noteInput"){ state.note = e.target.value; }
   }
-  window.addEventListener('beforeunload', function (e) {
-  // 檢查是否正在填寫新增圖示的表單
-  const label = document.getElementById("newIconLabel").value;
-  if (label && label.trim() !== "") {
-    e.preventDefault();
-    e.returnValue = ''; // 這會觸發瀏覽器的離開提示
-  }
-});
+window.addEventListener('beforeunload', function (e) {
+    const label = document.getElementById("newIconLabel");
+    if (label && label.value && label.value.trim() !== "") {
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  });
 
-  // ---------- init ----------
-  async function init(){
-    const savedLabel = localStorage.getItem("temp_iconLabel");
-    if(savedLabel) document.getElementById("newIconLabel").value = savedLabel;
-    document.getElementById("viewRoot").innerHTML = `<div class="empty-state">載入中…</div>`;
-    await loadAll();
-    render();
-    document.body.addEventListener("click", onBodyClick);
-    document.body.addEventListener("change", onBodyChange);
-    document.body.addEventListener("input", onBodyInput);
-    setInterval(refreshShared, 15000);
-  }
 
-  init();
-})();
 </script>
 </body>
 </html>
