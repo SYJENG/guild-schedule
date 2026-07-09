@@ -286,25 +286,39 @@
 (function(){
   "use strict";
 
-  // 等待 DOM 元素全部載入完成
+  // 1. 將所有設定與變數移入 IIFE 內，確保作用域正確
+  const SUPABASE_URL = "https://ipuiikywfbqwuypenshl.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_DfYbmgIEjEVZu21j5wf1kQ_-KygmVxx";
+  const KV_TABLE = "kv_store";
+  const EDGE_FUNCTION_URL = SUPABASE_URL + "/functions/v1/kv-write";
+  
+  // 初始化 supabaseClient
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  let state = { /* ... 你的 state 初始值 ... */ };
+
+  // 2. 將函式定義全部放在這裡 (callEdgeFunction, forceArray, 等等)
+  async function callEdgeFunction(body){ /* ... */ }
+  function forceArray(data){ /* ... */ }
+  // ... 其他所有函式 ...
+
+  // 3. 確保所有 DOM 操作都在 DOMContentLoaded 之後
   document.addEventListener('DOMContentLoaded', () => {
     
-    // 1. 恢復暫存資料的邏輯
+    // 恢復暫存資料
     const iconLabelInput = document.getElementById("newIconLabel");
     if (iconLabelInput) {
       const savedLabel = localStorage.getItem("temp_iconLabel");
       if(savedLabel) iconLabelInput.value = savedLabel;
-      
-      // 2. 綁定輸入監聽，確保隨時自動存檔
       iconLabelInput.addEventListener("input", (e) => {
         localStorage.setItem("temp_iconLabel", e.target.value);
       });
     }
 
-    // 3. 原有的初始化邏輯 (init)
+    // 初始化應用程式
     async function init() {
       document.getElementById("viewRoot").innerHTML = `<div class="empty-state">載入中…</div>`;
-      await loadAll();
+      await loadAll(); // 此時 supabaseClient 已定義，不會報錯
       render();
       document.body.addEventListener("click", onBodyClick);
       document.body.addEventListener("change", onBodyChange);
@@ -312,8 +326,8 @@
       setInterval(refreshShared, 15000);
     }
     
-    init(); // 這是呼叫 init
-  })();
+    init();
+  });
 
   // 呼叫 kv-write Edge Function（新增預約 / 管理者寫入 / 密碼驗證，皆透過此函式送出）
   async function callEdgeFunction(body){
@@ -1554,16 +1568,14 @@ function holidaysOn(dateStr){
     if(e.target && e.target.id === "noteInput"){ state.note = e.target.value; }
   }
 window.addEventListener('beforeunload', function (e) {
-  const label = document.getElementById("newIconLabel");
-  if (label && label.value && label.value.trim() !== "") {
-    e.preventDefault();
-    e.returnValue = '';
-  }
-});
+    const label = document.getElementById("newIconLabel");
+    if (label && label.value && label.value.trim() !== "") {
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  });
 
 })();
-
-
 </script>
 </body>
 </html>
