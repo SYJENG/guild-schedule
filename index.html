@@ -312,8 +312,8 @@
       setInterval(refreshShared, 15000);
     }
     
-    init();
-  });
+    init(); // 這是呼叫 init
+  })();
 
   // 呼叫 kv-write Edge Function（新增預約 / 管理者寫入 / 密碼驗證，皆透過此函式送出）
   async function callEdgeFunction(body){
