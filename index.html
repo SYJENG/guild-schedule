@@ -283,6 +283,10 @@
 <div id="toast" class="toast"></div>
 
 <script>
+  // 在 script 區塊中，針對新增圖示的欄位綁定儲存事件
+document.getElementById("newIconLabel").addEventListener("input", (e) => {
+  localStorage.setItem("temp_iconLabel", e.target.value);
+});
 (function(){
   "use strict";
 
@@ -1534,9 +1538,19 @@ function holidaysOn(dateStr){
     if(e.target && e.target.id === "altNameInput"){ state.altName = e.target.value; }
     if(e.target && e.target.id === "noteInput"){ state.note = e.target.value; }
   }
+  window.addEventListener('beforeunload', function (e) {
+  // 檢查是否正在填寫新增圖示的表單
+  const label = document.getElementById("newIconLabel").value;
+  if (label && label.trim() !== "") {
+    e.preventDefault();
+    e.returnValue = ''; // 這會觸發瀏覽器的離開提示
+  }
+});
 
   // ---------- init ----------
   async function init(){
+    const savedLabel = localStorage.getItem("temp_iconLabel");
+    if(savedLabel) document.getElementById("newIconLabel").value = savedLabel;
     document.getElementById("viewRoot").innerHTML = `<div class="empty-state">載入中…</div>`;
     await loadAll();
     render();
