@@ -1554,12 +1554,14 @@ function holidaysOn(dateStr){
     if(e.target && e.target.id === "noteInput"){ state.note = e.target.value; }
   }
 window.addEventListener('beforeunload', function (e) {
-    const label = document.getElementById("newIconLabel");
-    if (label && label.value && label.value.trim() !== "") {
-      e.preventDefault();
-      e.returnValue = '';
-    }
-  });
+  const label = document.getElementById("newIconLabel");
+  if (label && label.value && label.value.trim() !== "") {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+
+})();
 
 
 </script>
