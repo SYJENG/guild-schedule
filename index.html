@@ -295,12 +295,30 @@
   // 初始化 supabaseClient
   const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  let state = { /* ... 你的 state 初始值 ... */ };
-
-  // 2. 將函式定義全部放在這裡 (callEdgeFunction, forceArray, 等等)
-  async function callEdgeFunction(body){ /* ... */ }
-  function forceArray(data){ /* ... */ }
-  // ... 其他所有函式 ...
+  let state = {
+    reservations: [],
+    settings: { advanceMonths: 2, capacity: 5, endMode: "forever", endDate: null },
+    holidays: [],
+    customIcons: [],
+    isAdmin: false,
+    adminPassword: "",
+    tab: "calendar", // calendar | admin
+    viewYear: null,
+    viewMonth: null, // 0-indexed
+    miniViewYear: null,
+    miniViewMonth: null, // 0-indexed, independent from the main calendar's view
+    selStart: null,
+    selEnd: null,
+    entryPeriod: "morning",
+    exitPeriod: "morning",
+    mainName: "",
+    altName: "",
+    note: "",
+    formError: "",
+    editingId: null,
+    editingHolidayId: null,
+    loaded: false
+  };
 
   // 3. 確保所有 DOM 操作都在 DOMContentLoaded 之後
   document.addEventListener('DOMContentLoaded', () => {
@@ -390,30 +408,7 @@
     return RESERVATION_COLOR_PALETTE[hash % RESERVATION_COLOR_PALETTE.length];
   }
 
-  let state = {
-    reservations: [],
-    settings: { advanceMonths: 2, capacity: 5, endMode: "forever", endDate: null },
-    holidays: [],
-    customIcons: [],
-    isAdmin: false,
-    adminPassword: "",
-    tab: "calendar", // calendar | admin
-    viewYear: null,
-    viewMonth: null, // 0-indexed
-    miniViewYear: null,
-    miniViewMonth: null, // 0-indexed, independent from the main calendar's view
-    selStart: null,
-    selEnd: null,
-    entryPeriod: "morning",
-    exitPeriod: "morning",
-    mainName: "",
-    altName: "",
-    note: "",
-    formError: "",
-    editingId: null,
-    editingHolidayId: null,
-    loaded: false
-  };
+
 
   // ---------- date utils ----------
   function pad(n){ return n < 10 ? "0"+n : ""+n; }
