@@ -283,10 +283,17 @@
 <div id="toast" class="toast"></div>
 
 <script>
-  // 在 script 區塊中，針對新增圖示的欄位綁定儲存事件
-document.getElementById("newIconLabel").addEventListener("input", (e) => {
-  localStorage.setItem("temp_iconLabel", e.target.value);
+// 使用 DOMContentLoaded 確保頁面元素都已準備好
+document.addEventListener('DOMContentLoaded', () => {
+  // 將原本的 addEventListener 移動到這裡
+  const iconLabel = document.getElementById("newIconLabel");
+  if (iconLabel) {
+    iconLabel.addEventListener("input", (e) => {
+      localStorage.setItem("temp_iconLabel", e.target.value);
+    });
+  }
 });
+
 (function(){
   "use strict";
 
